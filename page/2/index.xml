@@ -1,0 +1,587 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>seteuid0's blog</title><link>/</link><description>Recent content on seteuid0's blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><copyright>This is a customized copyright.</copyright><lastBuildDate>Sun, 18 Apr 2021 11:16:32 +0800</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml"/><item><title>Qemu-kvm下运行Android x86</title><link>/posts/qemu-kvm%e4%b8%8b%e8%bf%90%e8%a1%8candroid-x86/</link><pubDate>Thu, 25 Jan 2018 16:53:13 +0000</pubDate><guid>/posts/qemu-kvm%e4%b8%8b%e8%bf%90%e8%a1%8candroid-x86/</guid><description>seteuid0's blog /posts/qemu-kvm%e4%b8%8b%e8%bf%90%e8%a1%8candroid-x86/ -&lt;p>Android-x86 project 已经将x86架构的android系统准备继续，所以使用Qemu-kvm来安装Android系统就非常容易了。&lt;/p>
+&lt;ul>
+&lt;li>准备Android-x86的iso镜像，可以在http://www.android-x86.org/download 处下载&lt;/li>
+&lt;li>准备qemu kvm虚拟化环境，例如安装fedora或centos等系统，安装virt-manager来运行qemu-kvm&lt;/li>
+&lt;li>按照虚拟机创建流程来安装android x86的镜像。（我验证是下载的是7.1的镜像，安装时不要使用GPT分区）&lt;/li>
+&lt;/ul>
+&lt;p>这样Android x86就可以在虚拟机下运行了，验证了下默认的网络也是ok的，如果配置了spice，还可以通过remote-viewer等工具来访问该Android x86虚拟机，非常方便。&lt;/p>
+- /posts/qemu-kvm%e4%b8%8b%e8%bf%90%e8%a1%8candroid-x86/ - This is a customized copyright.</description></item><item><title>Linux下通过命令行关闭、开启显示器的方法</title><link>/posts/linux%e4%b8%8b%e9%80%9a%e8%bf%87%e5%91%bd%e4%bb%a4%e8%a1%8c%e5%85%b3%e9%97%ad%e3%80%81%e5%bc%80%e5%90%af%e6%98%be%e7%a4%ba%e5%99%a8%e7%9a%84%e6%96%b9%e6%b3%95/</link><pubDate>Tue, 31 Oct 2017 11:45:40 +0000</pubDate><guid>/posts/linux%e4%b8%8b%e9%80%9a%e8%bf%87%e5%91%bd%e4%bb%a4%e8%a1%8c%e5%85%b3%e9%97%ad%e3%80%81%e5%bc%80%e5%90%af%e6%98%be%e7%a4%ba%e5%99%a8%e7%9a%84%e6%96%b9%e6%b3%95/</guid><description>seteuid0's blog /posts/linux%e4%b8%8b%e9%80%9a%e8%bf%87%e5%91%bd%e4%bb%a4%e8%a1%8c%e5%85%b3%e9%97%ad%e3%80%81%e5%bc%80%e5%90%af%e6%98%be%e7%a4%ba%e5%99%a8%e7%9a%84%e6%96%b9%e6%b3%95/ -&lt;p>Linux下关闭、开启显示器有如下的方案，原理各不相同，将来载补充，先列出来：&lt;/p>
+&lt;ul>
+&lt;li>xrandr需要指定display和输出的设备，所以该命令可以制定具体关闭的显示器，实例如下：
+&lt;ul>
+&lt;li>xrandr -display :0 &amp;ndash;output DP1 &amp;ndash;off&lt;/li>
+&lt;li>xrandr -display :0 &amp;ndash;output DP1 &amp;ndash;auto&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>xset，xset关闭以后有键盘或鼠标输入时屏幕会被唤醒，命令如下：
+&lt;ul>
+&lt;li>xset dpms force off -display :0&lt;/li>
+&lt;li>xset dpms force on -display :0&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;li>vbetool，vbetool是一个较老的工具，在现在主流的系统中可能默认不会集成，此外该工具和intel i915驱动不兼容，所以如果使用i915驱动请不要使用该工具
+&lt;ul>
+&lt;li>vbetool dpms on&lt;/li>
+&lt;li>vbetool dpms off&lt;/li>
+&lt;/ul>
+&lt;/li>
+&lt;/ul>
+- /posts/linux%e4%b8%8b%e9%80%9a%e8%bf%87%e5%91%bd%e4%bb%a4%e8%a1%8c%e5%85%b3%e9%97%ad%e3%80%81%e5%bc%80%e5%90%af%e6%98%be%e7%a4%ba%e5%99%a8%e7%9a%84%e6%96%b9%e6%b3%95/ - This is a customized copyright.</description></item><item><title>Fedora 26无法锁屏</title><link>/posts/fedora-26%e6%97%a0%e6%b3%95%e9%94%81%e5%b1%8f/</link><pubDate>Wed, 26 Jul 2017 10:54:05 +0000</pubDate><guid>/posts/fedora-26%e6%97%a0%e6%b3%95%e9%94%81%e5%b1%8f/</guid><description>seteuid0's blog /posts/fedora-26%e6%97%a0%e6%b3%95%e9%94%81%e5%b1%8f/ -&lt;p>&lt;a href="https://www.reddit.com/r/Fedora/comments/6o77qo/lock_screen_doesnt_work_after_upgrading_to_f26/">Lock screen doesn&amp;rsquo;t work after upgrading to F26&lt;/a> It doesn&amp;rsquo;t work when SUPER+L, when suspending or when hibernating, in GNOME. Any idea on how to solve this? UPDATE/SOLVED: OK, it was disabled in dconf, although I didn&amp;rsquo;t do it, so I post the solution here in case someone looks for it, learnt from &lt;a href="https://www.reddit.com/r/archlinux/comments/67a582/gnome_3241_screen_lock_issues/">here&lt;/a>:```
+gsettings set org.gnome.desktop.lockdown disable-lock-screen false&lt;/p>
+&lt;pre>&lt;code class="language-ref：https://www.reddit.com/r/Fedora/comments/6o77qo/lock\_screen\_doesnt\_work\_after\_upgrading\_to\_f26/" data-lang="ref：https://www.reddit.com/r/Fedora/comments/6o77qo/lock\_screen\_doesnt\_work\_after\_upgrading\_to\_f26/">&lt;/code>&lt;/pre>- /posts/fedora-26%e6%97%a0%e6%b3%95%e9%94%81%e5%b1%8f/ - This is a customized copyright.</description></item><item><title>Fedora 25 vim右键无菜单解决办法</title><link>/posts/fedora-25-vim%e5%8f%b3%e9%94%ae%e6%97%a0%e8%8f%9c%e5%8d%95%e8%a7%a3%e5%86%b3%e5%8a%9e%e6%b3%95/</link><pubDate>Thu, 29 Dec 2016 17:03:46 +0000</pubDate><guid>/posts/fedora-25-vim%e5%8f%b3%e9%94%ae%e6%97%a0%e8%8f%9c%e5%8d%95%e8%a7%a3%e5%86%b3%e5%8a%9e%e6%b3%95/</guid><description>seteuid0's blog /posts/fedora-25-vim%e5%8f%b3%e9%94%ae%e6%97%a0%e8%8f%9c%e5%8d%95%e8%a7%a3%e5%86%b3%e5%8a%9e%e6%b3%95/ -&lt;p>不知道什么时候开始，fedora 25里vim右键菜单突然消失了，而且点击右键时切换到“视图”模式。平常也只是使用一些简单的vim，感觉基本够用了。现在看不折腾不行了，搜索、试验了下。方法如下：&lt;/p>
+&lt;ul>
+&lt;li>Stop sourcing &lt;code>$VIMRUNTIME/vimrc_example.vim&lt;/code>.&lt;/li>
+&lt;li>Add &lt;code>set mouse-=a&lt;/code> to &lt;code>.vimrc&lt;/code> as you did.&lt;/li>
+&lt;li>Use another shortcuts. E.g. &lt;code>Shift + Insert&lt;/code>, &lt;code>Shift + right click&lt;/code>, or etc. (It depends on your terminal software.)&lt;/li>
+&lt;/ul>
+&lt;p>我是创建了一个~/.vimrc文件：set mouse-=a 问题解决。 参考：https://github.com/vim/vim/issues/1326&lt;/p>
+- /posts/fedora-25-vim%e5%8f%b3%e9%94%ae%e6%97%a0%e8%8f%9c%e5%8d%95%e8%a7%a3%e5%86%b3%e5%8a%9e%e6%b3%95/ - This is a customized copyright.</description></item><item><title>[ZZ]openvswitch学习笔记</title><link>/posts/zzopenvswitch%e5%ad%a6%e4%b9%a0%e7%ac%94%e8%ae%b0/</link><pubDate>Wed, 07 Dec 2016 16:16:21 +0000</pubDate><guid>/posts/zzopenvswitch%e5%ad%a6%e4%b9%a0%e7%ac%94%e8%ae%b0/</guid><description>seteuid0's blog /posts/zzopenvswitch%e5%ad%a6%e4%b9%a0%e7%ac%94%e8%ae%b0/ -&lt;p>场景： 创建一个Virtual Switch,支持VLAN，支持MAC-Learning 包含下面四个Port：&lt;/p>
+&lt;ul>
+&lt;li>P1, truck port&lt;/li>
+&lt;li>P2, VLAN 20&lt;/li>
+&lt;li>P3, P4 VLAN 30&lt;/li>
+&lt;/ul>
+&lt;p>包含五个flow table:```
+Table 0: Admission control.&lt;/p>
+&lt;pre>&lt;code>Table 1: VLAN input processing.
+Table 2: Learn source MAC and VLAN for ingress port.
+Table 3: Look up learned port for destination MAC and VLAN.
+Table 4: Output processing
+&lt;/code>&lt;/pre>
+&lt;p>&lt;code>首先创建一个bridge sudo ovs-vsctl add-br helloworld -- set bridge helloworld fail-mode=secure 然后我们查看这个bridge $ sudo ovs-vsctl show c24322e6-8453-402a-afaf-64757ef231e9 Bridge helloworld fail\_mode: secure Port helloworld Interface helloworld type: internal ovs\_version: &amp;quot;2.0.1&amp;quot; $ sudo ovs-ofctl show helloworld OFPT\_FEATURES\_REPLY (xid=0x2): dpid:00003ad44a48c646 n\_tables:254, n\_buffers:256 capabilities: FLOW\_STATS TABLE\_STATS PORT\_STATS QUEUE\_STATS ARP\_MATCH\_IP actions: OUTPUT SET\_VLAN\_VID SET\_VLAN\_PCP STRIP\_VLAN SET\_DL\_SRC SET\_DL\_DST SET\_NW\_SRC SET\_NW\_DST SET\_NW\_TOS SET\_TP\_SRC SET\_TP\_DST ENQUEUE LOCAL(helloworld): addr:3a:d4:4a:48:c6:46 config:     0 state:      0 speed: 0 Mbps now, 0 Mbps max OFPT\_GET\_CONFIG\_REPLY (xid=0x4): frags=normal miss\_send\_len=0 $ sudo ovs-ofctl dump-flows helloworld NXST\_FLOW reply (xid=0x4): 如果设为fail-secure mode，则初始情况下flow table是空的，否则会有normal $ sudo ovs-vsctl add-br helloworld1 $ sudo ovs-ofctl show helloworld1 OFPT\_FEATURES\_REPLY (xid=0x2): dpid:00008a2f1d184941 n\_tables:254, n\_buffers:256 capabilities: FLOW\_STATS TABLE\_STATS PORT\_STATS QUEUE\_STATS ARP\_MATCH\_IP actions: OUTPUT SET\_VLAN\_VID SET\_VLAN\_PCP STRIP\_VLAN SET\_DL\_SRC SET\_DL\_DST SET\_NW\_SRC SET\_NW\_DST SET\_NW\_TOS SET\_TP\_SRC SET\_TP\_DST ENQUEUE LOCAL(helloworld1): addr:8a:2f:1d:18:49:41 config:     0 state:      0 speed: 0 Mbps now, 0 Mbps max OFPT\_GET\_CONFIG\_REPLY (xid=0x4): frags=normal miss\_send\_len=0 $ sudo ovs-ofctl dump-flows helloworld1 NXST\_FLOW reply (xid=0x4): cookie=0x0, duration=31.467s, table=0, n\_packets=8, n\_bytes=648, idle\_age=21, priority=0 actions=NORMAL 接下来，创建四个veth pair sudo ip link add first\_br type veth peer name first\_if sudo ip link add second\_br type veth peer name second\_if sudo ip link add third\_br type veth peer name third\_if sudo ip link add forth\_br type veth peer name forth\_if xxx\_br将是添加到bridge上的。 我们添加四个端口port sudo ovs-vsctl add-port helloworld first\_br -- set Interface first\_br ofport\_request=1 sudo ovs-vsctl add-port helloworld second\_br -- set Interface second\_br ofport\_request=2 sudo ovs-vsctl add-port helloworld third\_br -- set Interface third\_br ofport\_request=3 sudo ovs-vsctl add-port helloworld forth\_br -- set Interface forth\_br ofport\_request=4 ofport\_request是指定端口号 新添加的port都是出于DOWN的状态 $ ip addr 22: first\_if: &amp;lt;BROADCAST,MULTICAST&amp;gt; mtu 1500 qdisc noop state DOWN group default qlen 1000 link/ether ca:d4:fd:47:a6:ce brd ff:ff:ff:ff:ff:ff 23: first\_br: &amp;lt;BROADCAST,MULTICAST&amp;gt; mtu 1500 qdisc noop master ovs-system state DOWN group default qlen 1000 link/ether f2:ac:70:72:49:61 brd ff:ff:ff:ff:ff:ff 24: second\_if: &amp;lt;BROADCAST,MULTICAST&amp;gt; mtu 1500 qdisc noop state DOWN group default qlen 1000 link/ether 76:fa:16:61:d7:0e brd ff:ff:ff:ff:ff:ff 25: second\_br: &amp;lt;BROADCAST,MULTICAST&amp;gt; mtu 1500 qdisc noop master ovs-system state DOWN group default qlen 1000 link/ether 66:63:74:a9:0e:f2 brd ff:ff:ff:ff:ff:ff 26: third\_if: &amp;lt;BROADCAST,MULTICAST&amp;gt; mtu 1500 qdisc noop state DOWN group default qlen 1000 link/ether 1e:6c:0e:6f:8c:cb brd ff:ff:ff:ff:ff:ff 27: third\_br: &amp;lt;BROADCAST,MULTICAST&amp;gt; mtu 1500 qdisc noop master ovs-system state DOWN group default qlen 1000 link/ether 7e:4e:87:28:33:93 brd ff:ff:ff:ff:ff:ff 28: forth\_if: &amp;lt;BROADCAST,MULTICAST&amp;gt; mtu 1500 qdisc noop state DOWN group default qlen 1000 link/ether 9a:0d:44:fc:6b:51 brd ff:ff:ff:ff:ff:ff 29: forth\_br: &amp;lt;BROADCAST,MULTICAST&amp;gt; mtu 1500 qdisc noop master ovs-system state DOWN group default qlen 1000 link/ether ea:01:d1:6a:2a:07 brd ff:ff:ff:ff:ff:ff 30: helloworld: &amp;lt;BROADCAST,UP,LOWER\_UP&amp;gt; mtu 1500 qdisc noqueue state UNKNOWN group default link/ether ee:04:95:bd:a3:4b brd ff:ff:ff:ff:ff:ff inet6 fe80::b42d:a4ff:fe49:ba75/64 scope link valid\_lft forever preferred\_lft forever $ sudo ovs-ofctl show helloworld OFPT\_FEATURES\_REPLY (xid=0x2): dpid:0000ee0495bda34b n\_tables:254, n\_buffers:256 capabilities: FLOW\_STATS TABLE\_STATS PORT\_STATS QUEUE\_STATS ARP\_MATCH\_IP actions: OUTPUT SET\_VLAN\_VID SET\_VLAN\_PCP STRIP\_VLAN SET\_DL\_SRC SET\_DL\_DST SET\_NW\_SRC SET\_NW\_DST SET\_NW\_TOS SET\_TP\_SRC SET\_TP\_DST ENQUEUE 1(first\_br): addr:f2:ac:70:72:49:61 config:     PORT\_DOWN state:      LINK\_DOWN current:    10GB-FD COPPER speed: 10000 Mbps now, 0 Mbps max 2(second\_br): addr:66:63:74:a9:0e:f2 config:     PORT\_DOWN state:      LINK\_DOWN current:    10GB-FD COPPER speed: 10000 Mbps now, 0 Mbps max 3(third\_br): addr:7e:4e:87:28:33:93 config:     PORT\_DOWN state:      LINK\_DOWN current:    10GB-FD COPPER speed: 10000 Mbps now, 0 Mbps max 4(forth\_br): addr:ea:01:d1:6a:2a:07 config:     PORT\_DOWN state:      LINK\_DOWN current:    10GB-FD COPPER speed: 10000 Mbps now, 0 Mbps max LOCAL(helloworld): addr:ee:04:95:bd:a3:4b config:     0 state:      0 speed: 0 Mbps now, 0 Mbps max OFPT\_GET\_CONFIG\_REPLY (xid=0x4): frags=normal miss\_send\_len=0 把它们设为UP sudo ip link set first\_if up sudo ip link set first\_br up sudo ip link set second\_br up sudo ip link set second\_if up sudo ip link set third\_if up sudo ip link set third\_br up sudo ip link set forth\_br up sudo ip link set forth\_if up 也可以用下面的命令 ovs-ofctl mod-port helloworld first\_br up $ sudo ip addr 22: first\_if: &amp;lt;BROADCAST,MULTICAST,UP,LOWER\_UP&amp;gt; mtu 1500 qdisc pfifo\_fast state UP group default qlen 1000 link/ether ca:d4:fd:47:a6:ce brd ff:ff:ff:ff:ff:ff inet6 fe80::c8d4:fdff:fe47:a6ce/64 scope link valid\_lft forever preferred\_lft forever 23: first\_br: &amp;lt;BROADCAST,MULTICAST,UP,LOWER\_UP&amp;gt; mtu 1500 qdisc pfifo\_fast master ovs-system state UP group default qlen 1000 link/ether f2:ac:70:72:49:61 brd ff:ff:ff:ff:ff:ff inet6 fe80::f0ac:70ff:fe72:4961/64 scope link valid\_lft forever preferred\_lft forever 24: second\_if: &amp;lt;BROADCAST,MULTICAST,UP,LOWER\_UP&amp;gt; mtu 1500 qdisc pfifo\_fast state UP group default qlen 1000 link/ether 76:fa:16:61:d7:0e brd ff:ff:ff:ff:ff:ff inet6 fe80::74fa:16ff:fe61:d70e/64 scope link valid\_lft forever preferred\_lft forever 25: second\_br: &amp;lt;BROADCAST,MULTICAST,UP,LOWER\_UP&amp;gt; mtu 1500 qdisc pfifo\_fast master ovs-system state UP group default qlen 1000 link/ether 66:63:74:a9:0e:f2 brd ff:ff:ff:ff:ff:ff inet6 fe80::6463:74ff:fea9:ef2/64 scope link valid\_lft forever preferred\_lft forever 26: third\_if: &amp;lt;BROADCAST,MULTICAST,UP,LOWER\_UP&amp;gt; mtu 1500 qdisc pfifo\_fast state UP group default qlen 1000 link/ether 1e:6c:0e:6f:8c:cb brd ff:ff:ff:ff:ff:ff inet6 fe80::1c6c:eff:fe6f:8ccb/64 scope link valid\_lft forever preferred\_lft forever 27: third\_br: &amp;lt;BROADCAST,MULTICAST,UP,LOWER\_UP&amp;gt; mtu 1500 qdisc pfifo\_fast master ovs-system state UP group default qlen 1000 link/ether 7e:4e:87:28:33:93 brd ff:ff:ff:ff:ff:ff inet6 fe80::7c4e:87ff:fe28:3393/64 scope link valid\_lft forever preferred\_lft forever 28: forth\_if: &amp;lt;BROADCAST,MULTICAST,UP,LOWER\_UP&amp;gt; mtu 1500 qdisc pfifo\_fast state UP group default qlen 1000 link/ether 9a:0d:44:fc:6b:51 brd ff:ff:ff:ff:ff:ff inet6 fe80::980d:44ff:fefc:6b51/64 scope link valid\_lft forever preferred\_lft forever 29: forth\_br: &amp;lt;BROADCAST,MULTICAST,UP,LOWER\_UP&amp;gt; mtu 1500 qdisc pfifo\_fast master ovs-system state UP group default qlen 1000 link/ether ea:01:d1:6a:2a:07 brd ff:ff:ff:ff:ff:ff inet6 fe80::e801:d1ff:fe6a:2a07/64 scope link valid\_lft forever preferred\_lft forever 30: helloworld: &amp;lt;BROADCAST,UP,LOWER\_UP&amp;gt; mtu 1500 qdisc noqueue state UNKNOWN group default link/ether ee:04:95:bd:a3:4b brd ff:ff:ff:ff:ff:ff inet6 fe80::b42d:a4ff:fe49:ba75/64 scope link valid\_lft forever preferred\_lft forever $ sudo ovs-ofctl show helloworld OFPT\_FEATURES\_REPLY (xid=0x2): dpid:0000ee0495bda34b n\_tables:254, n\_buffers:256 capabilities: FLOW\_STATS TABLE\_STATS PORT\_STATS QUEUE\_STATS ARP\_MATCH\_IP actions: OUTPUT SET\_VLAN\_VID SET\_VLAN\_PCP STRIP\_VLAN SET\_DL\_SRC SET\_DL\_DST SET\_NW\_SRC SET\_NW\_DST SET\_NW\_TOS SET\_TP\_SRC SET\_TP\_DST ENQUEUE 1(first\_br): addr:f2:ac:70:72:49:61 config:     0 state:      0 current:    10GB-FD COPPER speed: 10000 Mbps now, 0 Mbps max 2(second\_br): addr:66:63:74:a9:0e:f2 config:     0 state:      0 current:    10GB-FD COPPER speed: 10000 Mbps now, 0 Mbps max 3(third\_br): addr:7e:4e:87:28:33:93 config:     0 state:      0 current:    10GB-FD COPPER speed: 10000 Mbps now, 0 Mbps max 4(forth\_br): addr:ea:01:d1:6a:2a:07 config:     0 state:      0 current:    10GB-FD COPPER speed: 10000 Mbps now, 0 Mbps max LOCAL(helloworld): addr:ee:04:95:bd:a3:4b config:     0 state:      0 speed: 0 Mbps now, 0 Mbps max OFPT\_GET\_CONFIG\_REPLY (xid=0x4): frags=normal miss\_send\_len=0 实现第一个Table 0，Admission control 包进入vswitch的时候首先进入Table 0，我们在这里可以设定规则，控制那些包可以进入，那些包不可以进入。 比如，如果source address是multicast的就不允许进入。&lt;/code>
+01:00:00:00:00:00/01:00:00:00:00:00是广播地址&lt;/p>
+&lt;pre>&lt;code>00:00:00:00:00:00/01:00:00:00:00:00是单播地址
+&lt;/code>&lt;/pre>&lt;p>这种表示形式类似CIDR&lt;/p>
+&lt;pre>&lt;code>于是我们添加下面的规则：
+&lt;/code>&lt;/pre>&lt;p>sudo ovs-ofctl add-flow helloworld &amp;ldquo;table=0, dl_src=01:00:00:00:00:00/01:00:00:00:00:00, actions=drop&amp;rdquo;&lt;/p>
+&lt;pre>&lt;code>STP的也不接受
+&lt;/code>&lt;/pre>&lt;p>sudo ovs-ofctl add-flow helloworld &amp;ldquo;table=0, dl_dst=01:80:c2:00:00:00/ff:ff:ff:ff:ff:f0, actions=drop&amp;rdquo;&lt;/p>
+&lt;pre>&lt;code>我们在添加最后一个flow，这个flow的priority低于default，如果上面两个不匹配，则我们进入table 1
+&lt;/code>&lt;/pre>&lt;p>sudo ovs-ofctl add-flow helloworld &amp;ldquo;table=0, priority=0, actions=resubmit(,1)&amp;rdquo;&lt;/p>
+&lt;pre>&lt;code>我们查看一下所有的flow
+```$ sudo ovs-ofctl dump-flows helloworld NXST\_FLOW reply (xid=0x4): cookie=0x0, duration=42.162s, table=0, n\_packets=0, n\_bytes=0, idle\_age=42, priority=0 actions=resubmit(,1) cookie=0x0, duration=232.121s, table=0, n\_packets=0, n\_bytes=0, idle\_age=232, dl\_src=01:00:00:00:00:00/01:00:00:00:00:00 actions=drop cookie=0x0, duration=167.636s, table=0, n\_packets=0, n\_bytes=0, idle\_age=167, dl\_dst=01:80:c2:00:00:00/ff:ff:ff:ff:ff:f0 actions=drop 测试Table 0 有个很好的工具ovs-appctl ofproto/trace 不满足条件DROP $ sudo ovs-appctl ofproto/trace helloworld in\_port=1,dl\_dst=01:80:c2:00:00:05 Flow: metadata=0,in\_port=1,vlan\_tci=0x0000,dl\_src=00:00:00:00:00:00,dl\_dst=01:80:c2:00:00:05,dl\_type=0x0000 Rule: table=0 cookie=0 dl\_dst=01:80:c2:00:00:00/ff:ff:ff:ff:ff:f0 OpenFlow actions=drop Final flow: unchanged Relevant fields: skb\_priority=0,in\_port=1,dl\_src=00:00:00:00:00:00/01:00:00:00:00:00,dl\_dst=01:80:c2:00:00:00/ff:ff:ff:ff:ff:f0,dl\_type=0x0000,nw\_frag=no Datapath actions: drop 满足条件RESUBMIT $ sudo ovs-appctl ofproto/trace helloworld in\_port=1,dl\_dst=01:80:c2:00:00:10 Flow: metadata=0,in\_port=1,vlan\_tci=0x0000,dl\_src=00:00:00:00:00:00,dl\_dst=01:80:c2:00:00:10,dl\_type=0x0000 Rule: table=0 cookie=0 priority=0 OpenFlow actions=resubmit(,1) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop No match Final flow: unchanged Relevant fields: skb\_priority=0,in\_port=1,dl\_src=00:00:00:00:00:00/01:00:00:00:00:00,dl\_dst=01:80:c2:00:00:10/ff:ff:ff:ff:ff:f0,dl\_type=0x0000,nw\_frag=no Datapath actions: drop 实现第二个Table 1：VLAN Input Processing 首先添加一个最低优先级的DROP的规则 sudo ovs-ofctl add-flow helloworld &amp;quot;table=1, priority=0, actions=drop&amp;quot; 对于port 1，是trunk口，无论有没有VLAN Header都接受。 sudo ovs-ofctl add-flow helloworld &amp;quot;table=1, priority=99, in\_port=1, actions=resubmit(,2)&amp;quot; 对于port 2, 3, 4, 我们希望没有VLAN Tag，然后我们给打上VLAN Tag $ sudo ovs-ofctl add-flows helloworld - &amp;lt;&amp;lt;'EOF' table=1, priority=99, in\_port=2, vlan\_tci=0, actions=mod\_vlan\_vid:20, resubmit(,2) table=1, priority=99, in\_port=3, vlan\_tci=0, actions=mod\_vlan\_vid:30, resubmit(,2) table=1, priority=99, in\_port=4, vlan\_tci=0, actions=mod\_vlan\_vid:30, resubmit(,2) EOF $ sudo ovs-ofctl dump-flows helloworld NXST\_FLOW reply (xid=0x4): cookie=0x0, duration=4478.582s, table=0, n\_packets=0, n\_bytes=0, idle\_age=4478, priority=0 actions=resubmit(,1) cookie=0x0, duration=4668.541s, table=0, n\_packets=0, n\_bytes=0, idle\_age=4668, dl\_src=01:00:00:00:00:00/01:00:00:00:00:00 actions=drop cookie=0x0, duration=4604.056s, table=0, n\_packets=0, n\_bytes=0, idle\_age=4604, dl\_dst=01:80:c2:00:00:00/ff:ff:ff:ff:ff:f0 actions=drop cookie=0x0, duration=89.273s, table=1, n\_packets=0, n\_bytes=0, idle\_age=89, priority=99,in\_port=2,vlan\_tci=0x0000 actions=mod\_vlan\_vid:20,resubmit(,2) cookie=0x0, duration=89.273s, table=1, n\_packets=0, n\_bytes=0, idle\_age=89, priority=99,in\_port=4,vlan\_tci=0x0000 actions=mod\_vlan\_vid:30,resubmit(,2) cookie=0x0, duration=89.273s, table=1, n\_packets=0, n\_bytes=0, idle\_age=89, priority=99,in\_port=3,vlan\_tci=0x0000 actions=mod\_vlan\_vid:30,resubmit(,2) cookie=0x0, duration=220.318s, table=1, n\_packets=0, n\_bytes=0, idle\_age=220, priority=99,in\_port=1 actions=resubmit(,2) cookie=0x0, duration=298.739s, table=1, n\_packets=0, n\_bytes=0, idle\_age=298, priority=0 actions=drop 测试一个从port 1进入，tag为5的 $ sudo ovs-appctl ofproto/trace helloworld in\_port=1,vlan\_tci=5 Flow: metadata=0,in\_port=1,vlan\_tci=0x0005,dl\_src=00:00:00:00:00:00,dl\_dst=00:00:00:00:00:00,dl\_type=0x0000 Rule: table=0 cookie=0 priority=0 OpenFlow actions=resubmit(,1) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=1 cookie=0 priority=99,in\_port=1 OpenFlow actions=resubmit(,2) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop No match Final flow: unchanged Relevant fields: skb\_priority=0,in\_port=1,dl\_src=00:00:00:00:00:00/01:00:00:00:00:00,dl\_dst=00:00:00:00:00:00/ff:ff:ff:ff:ff:f0,dl\_type=0x0000,nw\_frag=no Datapath actions: drop 测试二，从port 2进入，没有打Tag的 $ sudo ovs-appctl ofproto/trace helloworld in\_port=2 Flow: metadata=0,in\_port=2,vlan\_tci=0x0000,dl\_src=00:00:00:00:00:00,dl\_dst=00:00:00:00:00:00,dl\_type=0x0000 Rule: table=0 cookie=0 priority=0 OpenFlow actions=resubmit(,1) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=1 cookie=0 priority=99,in\_port=2,vlan\_tci=0x0000 OpenFlow actions=mod\_vlan\_vid:20,resubmit(,2) Resubmitted flow: metadata=0,in\_port=2,dl\_vlan=20这里被打上了Tag,dl\_vlan\_pcp=0,dl\_src=00:00:00:00:00:00,dl\_dst=00:00:00:00:00:00,dl\_type=0x0000 Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop No match Final flow: unchanged Relevant fields: skb\_priority=0,in\_port=2,vlan\_tci=0x0000,dl\_src=00:00:00:00:00:00/01:00:00:00:00:00,dl\_dst=00:00:00:00:00:00/ff:ff:ff:ff:ff:f0,dl\_type=0x0000,nw\_frag=no Datapath actions: drop 测试三：从port进入，带Tag 5的 $ sudo ovs-appctl ofproto/trace helloworld in\_port=2,vlan\_tci=5 Flow: metadata=0,in\_port=2,vlan\_tci=0x0005,dl\_src=00:00:00:00:00:00,dl\_dst=00:00:00:00:00:00,dl\_type=0x0000 Rule: table=0 cookie=0 priority=0 OpenFlow actions=resubmit(,1) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=1 cookie=0 priority=0 OpenFlow actions=drop Final flow: unchanged Relevant fields: skb\_priority=0,in\_port=2,vlan\_tci=0x0005,dl\_src=00:00:00:00:00:00/01:00:00:00:00:00,dl\_dst=00:00:00:00:00:00/ff:ff:ff:ff:ff:f0,dl\_type=0x0000,nw\_frag=no Datapath actions: drop 实现第三个Table 2: MAC, VLAN learning for ingress port 对于普通的switch，都会有这个学习的过程，当一个包到来的时候，由于包里面有MAC，VLAN Tag，以及从哪个口进来的这个信息。于是switch学习后，维护了一个表格port –&amp;gt; MAC –&amp;gt; VLAN Tag。 这样以后如果有需要发给这个MAC的包，不用ARP，switch自然之道应该发给哪个port，应该打什么VLAN Tag。 OVS也要学习这个，并维护三个之间的mapping关系。 在我们的例子中，无论是从port进来的本身就带Tag的，还是从port 2, 3, 4进来的后来被打上Tag的，都需要学习。 sudo ovs-ofctl add-flow helloworld &amp;quot;table=2 actions=learn(table=10, NXM\_OF\_VLAN\_TCI\[0..11\], NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\], load:NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0\[0..15\]), resubmit(,3)&amp;quot; 这一句比较难理解。 learn表示这是一个学习的action table 10，这是一个MAC learning table，学习的结果会放在这个table中。 NXM\_OF\_VLAN\_TCI这个是VLAN Tag，在MAC Learning table中，每一个entry都是仅仅对某一个VLAN来说的，不同VLAN的learning table是分开的。在学习的结果的entry中，会标出这个entry是对于哪个VLAN的。 NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\]这个的意思是当前包里面的MAC Source Address会被放在学习结果的entry里面的dl\_dst里面。这是因为每个switch都是通过Ingress包来学习，某个MAC从某个port进来，switch就应该记住以后发往这个MAC的包要从这个port出去，因而MAC source address就被放在了Mac destination address里面，因为这是为发送用的。 NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0将portf放入register. 一般对于学习的entry还需要有hard\_timeout，这是的每个学习结果都会expire，需要重新学习。 我们再来分析一个实践中，openstack中使用openvswitch的情况，这是br-tun上的规则。 **cookie=0x0, duration=802188.071s, table=10, n\_packets=4885, n\_bytes=347789, idle\_age=730, hard\_age=65534, priority=1 actions=learn(table=20,hard\_timeout=300,priority=1,NXM\_OF\_VLAN\_TCI\[0..11\],NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\],load:0-&amp;gt;NXM\_OF\_VLAN\_TCI\[\],load:NXM\_NX\_TUN\_ID\[\]-&amp;gt;NXM\_NX\_TUN\_ID\[\],output:NXM\_OF\_IN\_PORT\[\]),output:1** cookie=0x0, duration=802187.786s, table=20, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=0 actions=resubmit(,21) **cookie=0x0, duration=802038.514s, table=20, n\_packets=1239, n\_bytes=83620, idle\_age=735, hard\_age=65534, priority=2,dl\_vlan=1,dl\_dst=fa:16:3e:7e:ab:cc actions=strip\_vlan,set\_tunnel:0x3e9,output:2** cookie=0x0, duration=802187.653s, table=21, n\_packets=17, n\_bytes=1426, idle\_age=65534, hard\_age=65534, priority=0 actions=drop cookie=0x0, duration=802055.878s, table=21, n\_packets=40, n\_bytes=1736, idle\_age=65534, hard\_age=65534, dl\_vlan=1 actions=strip\_vlan,set\_tunnel:0x3e9,output:2 这里table 10是用来学习的。table 20是learning table。如果table 20是空的，也即还没有学到什么，则会通过priority=0的规则resubmit到table 21. table 21是发送规则，将br-int上的vlan tag消除，然后打上gre tunnel的id。 上面的情况中，table 20不是空的，也即发送给dl\_dst=fa:16:3e:7e:ab:cc的包不用走默认规则，直接通过table 20就发送出去了。 table 20的规则是通过table 10学习得到的，table 10是一个接受规则。最终output 1，发送给了br-int NXM\_OF\_VLAN\_TCI\[0..11\]是记录vlan tag，所以学习结果中有dl\_vlan=1 NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\]是将mac source address记录，所以结果中有dl\_dst=fa:16:3e:7e:ab:cc load:0-&amp;gt;NXM\_OF\_VLAN\_TCI\[\]意思是发送出去的时候，vlan tag设为0，所以结果中有actions=strip\_vlan load:NXM\_NX\_TUN\_ID\[\]-&amp;gt;NXM\_NX\_TUN\_ID\[\]意思是发出去的时候，设置tunnul id，所以结果中有set\_tunnel:0x3e9 output:NXM\_OF\_IN\_PORT\[\]意思是发送给哪个port，由于是从port2进来的，因而结果中有output:2 测试一：从port 1来一个vlan为20的mac为50:00:00:00:00:01的包 $ sudo ovs-appctl ofproto/trace helloworld in\_port=1,vlan\_tci=20,dl\_src=50:00:00:00:00:01 -generate Flow: metadata=0,in\_port=1,vlan\_tci=0x0014,dl\_src=50:00:00:00:00:01,dl\_dst=00:00:00:00:00:00,dl\_type=0x0000 Rule: table=0 cookie=0 priority=0 OpenFlow actions=resubmit(,1) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=1 cookie=0 priority=99,in\_port=1 OpenFlow actions=resubmit(,2) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=2 cookie=0 OpenFlow actions=learn(table=10,NXM\_OF\_VLAN\_TCI\[0..11\],NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\],load:NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0\[0..15\]),resubmit(,3) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop No match Final flow: unchanged Relevant fields: skb\_priority=0,in\_port=1,vlan\_tci=0x0014/0x0fff,dl\_src=50:00:00:00:00:01,dl\_dst=00:00:00:00:00:00/ff:ff:ff:ff:ff:f0,dl\_type=0x0000,nw\_frag=no Datapath actions: drop $ sudo ovs-ofctl dump-flows helloworld NXST\_FLOW reply (xid=0x4): cookie=0x0, duration=90537.25s, table=0, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=0 actions=resubmit(,1) cookie=0x0, duration=90727.209s, table=0, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, dl\_src=01:00:00:00:00:00/01:00:00:00:00:00 actions=drop cookie=0x0, duration=90662.724s, table=0, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, dl\_dst=01:80:c2:00:00:00/ff:ff:ff:ff:ff:f0 actions=drop cookie=0x0, duration=86147.941s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=2,vlan\_tci=0x0000 actions=mod\_vlan\_vid:20,resubmit(,2) cookie=0x0, duration=86147.941s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=4,vlan\_tci=0x0000 actions=mod\_vlan\_vid:30,resubmit(,2) cookie=0x0, duration=86147.941s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=3,vlan\_tci=0x0000 actions=mod\_vlan\_vid:30,resubmit(,2) cookie=0x0, duration=86278.986s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=1 actions=resubmit(,2) cookie=0x0, duration=86357.407s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=0 actions=drop cookie=0x0, duration=83587.281s, table=2, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, actions=learn(table=10,NXM\_OF\_VLAN\_TCI\[0..11\],NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\],load:NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0\[0..15\]),resubmit(,3) **cookie=0x0, duration=31.258s, table=10, n\_packets=0, n\_bytes=0, idle\_age=31, vlan\_tci=0x0014/0x0fff,dl\_dst=50:00:00:00:00:01 actions=load:0x1-&amp;gt;NXM\_NX\_REG0\[0..15\]** table 10多了一条，vlan为20，dl\_dst为50:00:00:00:00:01，发送的时候从port 1出去。 测试二：从port 2进来，被打上了vlan 20，mac为50:00:00:00:00:02 $ sudo ovs-appctl ofproto/trace helloworld in\_port=2,dl\_src=50:00:00:00:00:02 -generate Flow: metadata=0,in\_port=2,vlan\_tci=0x0000,dl\_src=50:00:00:00:00:02,dl\_dst=00:00:00:00:00:00,dl\_type=0x0000 Rule: table=0 cookie=0 priority=0 OpenFlow actions=resubmit(,1) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=1 cookie=0 priority=99,in\_port=2,vlan\_tci=0x0000 OpenFlow actions=mod\_vlan\_vid:20,resubmit(,2) Resubmitted flow: metadata=0,in\_port=2,dl\_vlan=20,dl\_vlan\_pcp=0,dl\_src=50:00:00:00:00:02,dl\_dst=00:00:00:00:00:00,dl\_type=0x0000 Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=2 cookie=0 OpenFlow actions=learn(table=10,NXM\_OF\_VLAN\_TCI\[0..11\],NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\],load:NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0\[0..15\]),resubmit(,3) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop No match Final flow: unchanged Relevant fields: skb\_priority=0,in\_port=2,vlan\_tci=0x0000,dl\_src=50:00:00:00:00:02,dl\_dst=00:00:00:00:00:00/ff:ff:ff:ff:ff:f0,dl\_type=0x0000,nw\_frag=no Datapath actions: drop $ sudo ovs-ofctl dump-flows helloworld NXST\_FLOW reply (xid=0x4): cookie=0x0, duration=90823.14s, table=0, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=0 actions=resubmit(,1) cookie=0x0, duration=91013.099s, table=0, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, dl\_src=01:00:00:00:00:00/01:00:00:00:00:00 actions=drop cookie=0x0, duration=90948.614s, table=0, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, dl\_dst=01:80:c2:00:00:00/ff:ff:ff:ff:ff:f0 actions=drop cookie=0x0, duration=86433.831s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=2,vlan\_tci=0x0000 actions=mod\_vlan\_vid:20,resubmit(,2) cookie=0x0, duration=86433.831s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=4,vlan\_tci=0x0000 actions=mod\_vlan\_vid:30,resubmit(,2) cookie=0x0, duration=86433.831s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=3,vlan\_tci=0x0000 actions=mod\_vlan\_vid:30,resubmit(,2) cookie=0x0, duration=86564.876s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=1 actions=resubmit(,2) cookie=0x0, duration=86643.297s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=0 actions=drop cookie=0x0, duration=83873.171s, table=2, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, actions=learn(table=10,NXM\_OF\_VLAN\_TCI\[0..11\],NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\],load:NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0\[0..15\]),resubmit(,3) **cookie=0x0, duration=4.472s, table=10, n\_packets=0, n\_bytes=0, idle\_age=4, vlan\_tci=0x0014/0x0fff,dl\_dst=50:00:00:00:00:02 actions=load:0x2-&amp;gt;NXM\_NX\_REG0\[0..15\]** cookie=0x0, duration=317.148s, table=10, n\_packets=0, n\_bytes=0, idle\_age=317, vlan\_tci=0x0014/0x0fff,dl\_dst=50:00:00:00:00:01 actions=load:0x1-&amp;gt;NXM\_NX\_REG0\[0..15\] 实现第四个table 3: Look Up Destination Port 在table 2中，vswtich通过进入的包，学习了vlanid –&amp;gt; mac –&amp;gt; port的映射后，对于要发送的包，可以根据学习到的table 10里面的内容，根据destination mac和vlan，来找到相应的port发送出去，而不用每次都flood sudo ovs-ofctl add-flow helloworld &amp;quot;table=3 priority=50 actions=resubmit(,10), resubmit(,4)&amp;quot; 添加这条规则，首先到table 10中查找learn table entry，如果找不到则到table 4 如果包本身就是multicast的或者broadcast的，则不用去table 10里面取查找。 sudo ovs-ofctl add-flow helloworld &amp;quot;table=3 priority=99 dl\_dst=01:00:00:00:00:00/01:00:00:00:00:00 actions=resubmit(,4)&amp;quot; 我们进行一项测试 $ sudo ovs-appctl ofproto/trace helloworld in\_port=1,dl\_vlan=20,dl\_src=f0:00:00:00:00:01,dl\_dst=90:00:00:00:00:01 -generate Flow: metadata=0,in\_port=1,dl\_vlan=20,dl\_vlan\_pcp=0,dl\_src=f0:00:00:00:00:01,dl\_dst=90:00:00:00:00:01,dl\_type=0x0000 Rule: table=0 cookie=0 priority=0 OpenFlow actions=resubmit(,1) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=1 cookie=0 priority=99,in\_port=1 OpenFlow actions=resubmit(,2) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=2 cookie=0 OpenFlow actions=learn(table=10,NXM\_OF\_VLAN\_TCI\[0..11\],NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\],load:NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0\[0..15\]),resubmit(,3) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=3 cookie=0 priority=50 OpenFlow actions=resubmit(,10),resubmit(,4) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop No match Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop No match Final flow: unchanged Relevant fields: skb\_priority=0,in\_port=1,vlan\_tci=0x0014/0x0fff,dl\_src=f0:00:00:00:00:01,dl\_dst=90:00:00:00:00:01,dl\_type=0x0000,nw\_frag=no Datapath actions: drop 由于目标地址f0:00:00:00:00:01没有在table 10中找到，因而到达table 4. 但是这次测试使得table 10中学习到了mac地址90:00:00:00:00:01 $ sudo ovs-ofctl dump-flows helloworld NXST\_FLOW reply (xid=0x4): cookie=0x0, duration=91588.452s, table=0, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=0 actions=resubmit(,1) cookie=0x0, duration=91778.411s, table=0, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, dl\_src=01:00:00:00:00:00/01:00:00:00:00:00 actions=drop cookie=0x0, duration=91713.926s, table=0, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, dl\_dst=01:80:c2:00:00:00/ff:ff:ff:ff:ff:f0 actions=drop cookie=0x0, duration=87199.143s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=2,vlan\_tci=0x0000 actions=mod\_vlan\_vid:20,resubmit(,2) cookie=0x0, duration=87199.143s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=4,vlan\_tci=0x0000 actions=mod\_vlan\_vid:30,resubmit(,2) cookie=0x0, duration=87199.143s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=3,vlan\_tci=0x0000 actions=mod\_vlan\_vid:30,resubmit(,2) cookie=0x0, duration=87330.188s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=1 actions=resubmit(,2) cookie=0x0, duration=87408.609s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=0 actions=drop cookie=0x0, duration=84638.483s, table=2, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, actions=learn(table=10,NXM\_OF\_VLAN\_TCI\[0..11\],NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\],load:NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0\[0..15\]),resubmit(,3) cookie=0x0, duration=352.841s, table=3, n\_packets=0, n\_bytes=0, idle\_age=352, priority=50 actions=resubmit(,10),resubmit(,4) cookie=0x0, duration=212.704s, table=3, n\_packets=0, n\_bytes=0, idle\_age=212, priority=99,dl\_dst=01:00:00:00:00:00/01:00:00:00:00:00 actions=resubmit(,4) **cookie=0x0, duration=117.364s, table=10, n\_packets=0, n\_bytes=0, idle\_age=117, vlan\_tci=0x0014/0x0fff,dl\_dst=f0:00:00:00:00:01 actions=load:0x1-&amp;gt;NXM\_NX\_REG0\[0..15\]** cookie=0x0, duration=769.784s, table=10, n\_packets=0, n\_bytes=0, idle\_age=769, vlan\_tci=0x0014/0x0fff,dl\_dst=50:00:00:00:00:02 actions=load:0x2-&amp;gt;NXM\_NX\_REG0\[0..15\] cookie=0x0, duration=1082.46s, table=10, n\_packets=0, n\_bytes=0, idle\_age=1082, vlan\_tci=0x0014/0x0fff,dl\_dst=50:00:00:00:00:01 actions=load:0x1-&amp;gt;NXM\_NX\_REG0\[0..15\] 下面我们进行另一个测试 $ sudo ovs-appctl ofproto/trace helloworld in\_port=2,dl\_src=90:00:00:00:00:01,dl\_dst=f0:00:00:00:00:01 -generate Flow: metadata=0,in\_port=2,vlan\_tci=0x0000,dl\_src=90:00:00:00:00:01,dl\_dst=f0:00:00:00:00:01,dl\_type=0x0000 Rule: table=0 cookie=0 priority=0 OpenFlow actions=resubmit(,1) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=1 cookie=0 priority=99,in\_port=2,vlan\_tci=0x0000 OpenFlow actions=mod\_vlan\_vid:20,resubmit(,2) Resubmitted flow: metadata=0,in\_port=2,dl\_vlan=20,dl\_vlan\_pcp=0,dl\_src=90:00:00:00:00:01,dl\_dst=f0:00:00:00:00:01,dl\_type=0x0000 Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=2 cookie=0 OpenFlow actions=learn(table=10,NXM\_OF\_VLAN\_TCI\[0..11\],NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\],load:NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0\[0..15\]),resubmit(,3) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=3 cookie=0 priority=50 OpenFlow actions=resubmit(,10),resubmit(,4) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=10 cookie=0 vlan\_tci=0x0014/0x0fff,dl\_dst=f0:00:00:00:00:01 OpenFlow actions=load:0x1-&amp;gt;NXM\_NX\_REG0\[0..15\] Resubmitted flow: reg0=0x1,metadata=0,in\_port=2,dl\_vlan=20,dl\_vlan\_pcp=0,dl\_src=90:00:00:00:00:01,dl\_dst=f0:00:00:00:00:01,dl\_type=0x0000 Resubmitted regs: reg0=0x1 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop No match Final flow: unchanged Relevant fields: skb\_priority=0,in\_port=2,vlan\_tci=0x0000,dl\_src=90:00:00:00:00:01,dl\_dst=f0:00:00:00:00:01,dl\_type=0x0000,nw\_frag=no Datapath actions: drop 因为刚才学习到了mac地址f0:00:00:00:00:01，所以这次在table 10中找到了这条记录，这次同时也学习到了mac地址90:00:00:00:00:01 下面我们再发送第一次的包 $ sudo ovs-appctl ofproto/trace helloworld in\_port=1,dl\_vlan=20,dl\_src=f0:00:00:00:00:01,dl\_dst=90:00:00:00:00:01 -generate Flow: metadata=0,in\_port=1,dl\_vlan=20,dl\_vlan\_pcp=0,dl\_src=f0:00:00:00:00:01,dl\_dst=90:00:00:00:00:01,dl\_type=0x0000 Rule: table=0 cookie=0 priority=0 OpenFlow actions=resubmit(,1) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=1 cookie=0 priority=99,in\_port=1 OpenFlow actions=resubmit(,2) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=2 cookie=0 OpenFlow actions=learn(table=10,NXM\_OF\_VLAN\_TCI\[0..11\],NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\],load:NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0\[0..15\]),resubmit(,3) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=3 cookie=0 priority=50 OpenFlow actions=resubmit(,10),resubmit(,4) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=10 cookie=0 vlan\_tci=0x0014/0x0fff,dl\_dst=90:00:00:00:00:01 OpenFlow actions=load:0x2-&amp;gt;NXM\_NX\_REG0\[0..15\] Resubmitted flow: reg0=0x2,metadata=0,in\_port=1,dl\_vlan=20,dl\_vlan\_pcp=0,dl\_src=f0:00:00:00:00:01,dl\_dst=90:00:00:00:00:01,dl\_type=0x0000 Resubmitted regs: reg0=0x2 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop No match Final flow: unchanged Relevant fields: skb\_priority=0,in\_port=1,vlan\_tci=0x0014/0x0fff,dl\_src=f0:00:00:00:00:01,dl\_dst=90:00:00:00:00:01,dl\_type=0x0000,nw\_frag=no Datapath actions: drop 发现也在table 10中找到了记录 实现第五个table 4: Output Processing 这个时候，register 0中包含了output port，如果是0则说明是flood。 对于port 1来讲，是trunk port，所以携带的vlan tag就让他带着，从port 1出去。 sudo ovs-ofctl add-flow helloworld &amp;quot;table=4 reg0=1 actions=1&amp;quot; 对于port 2来讲，是vlan 20的，然而出去的时候，vlan tag会被抹掉，从port 2发出去 对于port 3， 4来讲，是vlan 30的，然而出去的时候，vlan tag会被抹掉，从port 3, 4出去 $ sudo ovs-ofctl add-flows helloworld - &amp;lt;&amp;lt;'EOF' table=4 reg0=2 actions=strip\_vlan,2 table=4 reg0=3 actions=strip\_vlan,3 table=4 reg0=4 actions=strip\_vlan,4 EOF 对于broadcast来讲，我们希望一个vlan的broadcast仅仅在这个vlan里面发送，不影响其他的vlan。 $ sudo ovs-ofctl add-flows helloworld - &amp;lt;&amp;lt;'EOF' table=4 reg0=0 priority=99 dl\_vlan=20 actions=1,strip\_vlan,2 table=4 reg0=0 priority=99 dl\_vlan=30 actions=1,strip\_vlan,3,4 table=4 reg0=0 priority=50            actions=1 EOF 所以对于register = 0的，也即是broadcast的，属于vlan 20的，则从port 1, 2出去，属于vlan 30的，则从port 1, 3, 4出去。 $ sudo ovs-ofctl dump-flows helloworld NXST\_FLOW reply (xid=0x4): cookie=0x0, duration=92909.119s, table=0, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=0 actions=resubmit(,1) cookie=0x0, duration=93099.078s, table=0, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, dl\_src=01:00:00:00:00:00/01:00:00:00:00:00 actions=drop cookie=0x0, duration=93034.593s, table=0, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, dl\_dst=01:80:c2:00:00:00/ff:ff:ff:ff:ff:f0 actions=drop cookie=0x0, duration=88519.81s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=2,vlan\_tci=0x0000 actions=mod\_vlan\_vid:20,resubmit(,2) cookie=0x0, duration=88519.81s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=4,vlan\_tci=0x0000 actions=mod\_vlan\_vid:30,resubmit(,2) cookie=0x0, duration=88519.81s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=3,vlan\_tci=0x0000 actions=mod\_vlan\_vid:30,resubmit(,2) cookie=0x0, duration=88650.855s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=99,in\_port=1 actions=resubmit(,2) cookie=0x0, duration=88729.276s, table=1, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, priority=0 actions=drop cookie=0x0, duration=85959.15s, table=2, n\_packets=0, n\_bytes=0, idle\_age=65534, hard\_age=65534, actions=learn(table=10,NXM\_OF\_VLAN\_TCI\[0..11\],NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\],load:NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0\[0..15\]),resubmit(,3) cookie=0x0, duration=1673.508s, table=3, n\_packets=0, n\_bytes=0, idle\_age=1673, priority=50 actions=resubmit(,10),resubmit(,4) cookie=0x0, duration=1533.371s, table=3, n\_packets=0, n\_bytes=0, idle\_age=1533, priority=99,dl\_dst=01:00:00:00:00:00/01:00:00:00:00:00 actions=resubmit(,4) cookie=0x0, duration=332.478s, table=4, n\_packets=0, n\_bytes=0, idle\_age=332, reg0=0x3 actions=strip\_vlan,output:3 cookie=0x0, duration=228.839s, table=4, n\_packets=0, n\_bytes=0, idle\_age=228, priority=50,reg0=0x0 actions=output:1 cookie=0x0, duration=483.068s, table=4, n\_packets=0, n\_bytes=0, idle\_age=483, reg0=0x1 actions=output:1 cookie=0x0, duration=332.478s, table=4, n\_packets=0, n\_bytes=0, idle\_age=332, reg0=0x4 actions=strip\_vlan,output:4 cookie=0x0, duration=332.478s, table=4, n\_packets=0, n\_bytes=0, idle\_age=332, reg0=0x2 actions=strip\_vlan,output:2 cookie=0x0, duration=228.84s, table=4, n\_packets=0, n\_bytes=0, idle\_age=228, priority=99,reg0=0x0,dl\_vlan=30 actions=output:1,strip\_vlan,output:3,output:4 cookie=0x0, duration=228.84s, table=4, n\_packets=0, n\_bytes=0, idle\_age=228, priority=99,reg0=0x0,dl\_vlan=20 actions=output:1,strip\_vlan,output:2 cookie=0x0, duration=1438.031s, table=10, n\_packets=0, n\_bytes=0, idle\_age=1438, hard\_age=1109, vlan\_tci=0x0014/0x0fff,dl\_dst=f0:00:00:00:00:01 actions=load:0x1-&amp;gt;NXM\_NX\_REG0\[0..15\] cookie=0x0, duration=2090.451s, table=10, n\_packets=0, n\_bytes=0, idle\_age=2090, vlan\_tci=0x0014/0x0fff,dl\_dst=50:00:00:00:00:02 actions=load:0x2-&amp;gt;NXM\_NX\_REG0\[0..15\] cookie=0x0, duration=1258.881s, table=10, n\_packets=0, n\_bytes=0, idle\_age=1258, vlan\_tci=0x0014/0x0fff,dl\_dst=90:00:00:00:00:01 actions=load:0x2-&amp;gt;NXM\_NX\_REG0\[0..15\] cookie=0x0, duration=2403.127s, table=10, n\_packets=0, n\_bytes=0, idle\_age=2403, vlan\_tci=0x0014/0x0fff,dl\_dst=50:00:00:00:00:01 actions=load:0x1-&amp;gt;NXM\_NX\_REG0\[0..15\] 首先来测试一个multicast和broadcast 如果是一个port 1来的vlan 30的broadcast $ sudo ovs-appctl ofproto/trace helloworld in\_port=1,dl\_dst=ff:ff:ff:ff:ff:ff,dl\_vlan=30 Flow: metadata=0,in\_port=1,dl\_vlan=30,dl\_vlan\_pcp=0,dl\_src=00:00:00:00:00:00,dl\_dst=ff:ff:ff:ff:ff:ff,dl\_type=0x0000 Rule: table=0 cookie=0 priority=0 OpenFlow actions=resubmit(,1) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=1 cookie=0 priority=99,in\_port=1 OpenFlow actions=resubmit(,2) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=2 cookie=0 OpenFlow actions=learn(table=10,NXM\_OF\_VLAN\_TCI\[0..11\],NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\],load:NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0\[0..15\]),resubmit(,3) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=3 cookie=0 priority=99,dl\_dst=01:00:00:00:00:00/01:00:00:00:00:00 OpenFlow actions=resubmit(,4) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=4 cookie=0 priority=99,reg0=0x0,dl\_vlan=30 **OpenFlow actions=output:1,strip\_vlan,output:3,output:4 skipping output to input port** Final flow: metadata=0,in\_port=1,vlan\_tci=0x0000,dl\_src=00:00:00:00:00:00,dl\_dst=ff:ff:ff:ff:ff:ff,dl\_type=0x0000 Relevant fields: skb\_priority=0,in\_port=1,dl\_vlan=30,dl\_vlan\_pcp=0,dl\_src=00:00:00:00:00:00,dl\_dst=ff:ff:ff:ff:ff:f0/ff:ff:ff:ff:ff:f0,dl\_type=0x0000,nw\_frag=no Datapath actions: pop\_vlan,12,13 结果是port 1就不发送了，发送给了port 3, 4 $ sudo ovs-appctl ofproto/trace helloworld in\_port=3,dl\_dst=ff:ff:ff:ff:ff:ff Flow: metadata=0,in\_port=3,vlan\_tci=0x0000,dl\_src=00:00:00:00:00:00,dl\_dst=ff:ff:ff:ff:ff:ff,dl\_type=0x0000 Rule: table=0 cookie=0 priority=0 OpenFlow actions=resubmit(,1) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=1 cookie=0 priority=99,in\_port=3,vlan\_tci=0x0000 OpenFlow actions=mod\_vlan\_vid:30,resubmit(,2) Resubmitted flow: metadata=0,in\_port=3,dl\_vlan=30,dl\_vlan\_pcp=0,dl\_src=00:00:00:00:00:00,dl\_dst=ff:ff:ff:ff:ff:ff,dl\_type=0x0000 Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=2 cookie=0 OpenFlow actions=learn(table=10,NXM\_OF\_VLAN\_TCI\[0..11\],NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\],load:NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0\[0..15\]),resubmit(,3) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=3 cookie=0 priority=99,dl\_dst=01:00:00:00:00:00/01:00:00:00:00:00 OpenFlow actions=resubmit(,4) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=4 cookie=0 priority=99,reg0=0x0,dl\_vlan=30 **OpenFlow actions=output:1,strip\_vlan,output:3,output:4 skipping output to input port** Final flow: metadata=0,in\_port=3,vlan\_tci=0x0000,dl\_src=00:00:00:00:00:00,dl\_dst=ff:ff:ff:ff:ff:ff,dl\_type=0x0000 Relevant fields: skb\_priority=0,in\_port=3,vlan\_tci=0x0000,dl\_src=00:00:00:00:00:00,dl\_dst=ff:ff:ff:ff:ff:f0/ff:ff:ff:ff:ff:f0,dl\_type=0x0000,nw\_frag=no Datapath actions: push\_vlan(vid=30,pcp=0),10,pop\_vlan,13 接着我们测试mac learning $ sudo ovs-appctl ofproto/trace helloworld in\_port=1,dl\_vlan=30,dl\_src=10:00:00:00:00:01,dl\_dst=20:00:00:00:00:01 -generate Flow: metadata=0,in\_port=1,dl\_vlan=30,dl\_vlan\_pcp=0,dl\_src=10:00:00:00:00:01,dl\_dst=20:00:00:00:00:01,dl\_type=0x0000 Rule: table=0 cookie=0 priority=0 OpenFlow actions=resubmit(,1) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=1 cookie=0 priority=99,in\_port=1 OpenFlow actions=resubmit(,2) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=2 cookie=0 OpenFlow actions=learn(table=10,NXM\_OF\_VLAN\_TCI\[0..11\],NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\],load:NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0\[0..15\]),resubmit(,3) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=3 cookie=0 priority=50 OpenFlow actions=resubmit(,10),resubmit(,4) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop No match Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=4 cookie=0 priority=99,reg0=0x0,dl\_vlan=30 OpenFlow actions=output:1,strip\_vlan,output:3,output:4 skipping output to input port Final flow: metadata=0,in\_port=1,vlan\_tci=0x0000,dl\_src=10:00:00:00:00:01,dl\_dst=20:00:00:00:00:01,dl\_type=0x0000 Relevant fields: skb\_priority=0,in\_port=1,dl\_vlan=30,dl\_vlan\_pcp=0,dl\_src=10:00:00:00:00:01,dl\_dst=20:00:00:00:00:01,dl\_type=0x0000,nw\_frag=no Datapath actions: pop\_vlan,12,13 由于这两个地址没有出现过，则除了进行学习以外，广播发送给port 3，4 $ sudo ovs-appctl ofproto/trace helloworld in\_port=4,dl\_src=20:00:00:00:00:01,dl\_dst=10:00:00:00:00:01 -generate Flow: metadata=0,in\_port=4,vlan\_tci=0x0000,dl\_src=20:00:00:00:00:01,dl\_dst=10:00:00:00:00:01,dl\_type=0x0000 Rule: table=0 cookie=0 priority=0 OpenFlow actions=resubmit(,1) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=1 cookie=0 priority=99,in\_port=4,vlan\_tci=0x0000 OpenFlow actions=mod\_vlan\_vid:30,resubmit(,2) Resubmitted flow: metadata=0,in\_port=4,dl\_vlan=30,dl\_vlan\_pcp=0,dl\_src=20:00:00:00:00:01,dl\_dst=10:00:00:00:00:01,dl\_type=0x0000 Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=2 cookie=0 OpenFlow actions=learn(table=10,NXM\_OF\_VLAN\_TCI\[0..11\],NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\],load:NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0\[0..15\]),resubmit(,3) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=3 cookie=0 priority=50 OpenFlow actions=resubmit(,10),resubmit(,4) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=10 cookie=0 vlan\_tci=0x001e/0x0fff,dl\_dst=10:00:00:00:00:01 OpenFlow actions=load:0x1-&amp;gt;NXM\_NX\_REG0\[0..15\] Resubmitted flow: reg0=0x1,metadata=0,in\_port=4,dl\_vlan=30,dl\_vlan\_pcp=0,dl\_src=20:00:00:00:00:01,dl\_dst=10:00:00:00:00:01,dl\_type=0x0000 Resubmitted regs: reg0=0x1 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=4 cookie=0 reg0=0x1 OpenFlow actions=output:1 Final flow: unchanged Relevant fields: skb\_priority=0,in\_port=4,vlan\_tci=0x0000,dl\_src=20:00:00:00:00:01,dl\_dst=10:00:00:00:00:01,dl\_type=0x0000,nw\_frag=no Datapath actions: push\_vlan(vid=30,pcp=0),10 回复的时候，由于学习过了，则仅仅从port 1发送出去。 $ sudo ovs-appctl ofproto/trace helloworld in\_port=1,dl\_vlan=30,dl\_src=10:00:00:00:00:01,dl\_dst=20:00:00:00:00:01 -generate Flow: metadata=0,in\_port=1,dl\_vlan=30,dl\_vlan\_pcp=0,dl\_src=10:00:00:00:00:01,dl\_dst=20:00:00:00:00:01,dl\_type=0x0000 Rule: table=0 cookie=0 priority=0 OpenFlow actions=resubmit(,1) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=1 cookie=0 priority=99,in\_port=1 OpenFlow actions=resubmit(,2) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=2 cookie=0 OpenFlow actions=learn(table=10,NXM\_OF\_VLAN\_TCI\[0..11\],NXM\_OF\_ETH\_DST\[\]=NXM\_OF\_ETH\_SRC\[\],load:NXM\_OF\_IN\_PORT\[\]-&amp;gt;NXM\_NX\_REG0\[0..15\]),resubmit(,3) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=3 cookie=0 priority=50 OpenFlow actions=resubmit(,10),resubmit(,4) Resubmitted flow: unchanged Resubmitted regs: reg0=0x0 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=10 cookie=0 vlan\_tci=0x001e/0x0fff,dl\_dst=20:00:00:00:00:01 OpenFlow actions=load:0x4-&amp;gt;NXM\_NX\_REG0\[0..15\] Resubmitted flow: reg0=0x4,metadata=0,in\_port=1,dl\_vlan=30,dl\_vlan\_pcp=0,dl\_src=10:00:00:00:00:01,dl\_dst=20:00:00:00:00:01,dl\_type=0x0000 Resubmitted regs: reg0=0x4 reg1=0x0 reg2=0x0 reg3=0x0 reg4=0x0 reg5=0x0 reg6=0x0 reg7=0x0 Resubmitted  odp: drop Rule: table=4 cookie=0 reg0=0x4 OpenFlow actions=strip\_vlan,output:4 Final flow: reg0=0x4,metadata=0,in\_port=1,vlan\_tci=0x0000,dl\_src=10:00:00:00:00:01,dl\_dst=20:00:00:00:00:01,dl\_type=0x0000 Relevant fields: skb\_priority=0,in\_port=1,dl\_vlan=30,dl\_vlan\_pcp=0,dl\_src=10:00:00:00:00:01,dl\_dst=20:00:00:00:00:01,dl\_type=0x0000,nw\_frag=no Datapath actions: pop\_vlan,13 由于在回复中进行了学习，因而发送的时候，仅仅发送port 4&lt;/code>&lt;/pre>- /posts/zzopenvswitch%e5%ad%a6%e4%b9%a0%e7%ac%94%e8%ae%b0/ - This is a customized copyright.</description></item><item><title>[转]基于 Open vSwitch 的 OpenFlow 实践</title><link>/posts/%e8%bd%ac%e5%9f%ba%e4%ba%8e-open-vswitch-%e7%9a%84-openflow-%e5%ae%9e%e8%b7%b5-2/</link><pubDate>Tue, 06 Dec 2016 12:41:29 +0000</pubDate><guid>/posts/%e8%bd%ac%e5%9f%ba%e4%ba%8e-open-vswitch-%e7%9a%84-openflow-%e5%ae%9e%e8%b7%b5-2/</guid><description>seteuid0's blog /posts/%e8%bd%ac%e5%9f%ba%e4%ba%8e-open-vswitch-%e7%9a%84-openflow-%e5%ae%9e%e8%b7%b5-2/ -&lt;h4 id="open-vswitch-概述">Open vSwitch 概述&lt;/h4>
+&lt;p>Open vSwitch（下面简称为 OVS）是由 Nicira Networks 主导的，运行在虚拟化平台（例如 KVM，Xen）上的虚拟交换机。在虚拟化平台上，OVS 可以为动态变化的端点提供 2 层交换功能，很好的控制虚拟网络中的访问策略、网络隔离、流量监控等等。 OVS 遵循 Apache 2.0 许可证, 能同时支持多种标准的管理接口和协议。OVS 也提供了对 OpenFlow 协议的支持，用户可以使用任何支持 OpenFlow 协议的控制器对 OVS 进行远程管理控制。&lt;/p>
+&lt;h5 id="open-vswitch-概述-1">Open vSwitch 概述&lt;/h5>
+&lt;p>在 OVS 中, 有几个非常重要的概念：&lt;/p>
+&lt;ul>
+&lt;li>Bridge: Bridge 代表一个以太网交换机（Switch），一个主机中可以创建一个或者多个 Bridge 设备。&lt;/li>
+&lt;li>Port: 端口与物理交换机的端口概念类似，每个 Port 都隶属于一个 Bridge。&lt;/li>
+&lt;li>Interface: 连接到 Port 的网络接口设备。在通常情况下，Port 和 Interface 是一对一的关系, 只有在配置 Port 为 bond 模式后，Port 和 Interface 是一对多的关系。&lt;/li>
+&lt;li>Controller: OpenFlow 控制器。OVS 可以同时接受一个或者多个 OpenFlow 控制器的管理。&lt;/li>
+&lt;li>datapath: 在 OVS 中，datapath 负责执行数据交换，也就是把从接收端口收到的数据包在流表中进行匹配，并执行匹配到的动作。&lt;/li>
+&lt;li>Flow table: 每个 datapath 都和一个“flow table”关联，当 datapath 接收到数据之后， OVS 会在 flow table 中查找可以匹配的 flow，执行对应的操作, 例如转发数据到另外的端口。&lt;/li>
+&lt;/ul>
+&lt;h5 id="open-vswitch-实验环境配置">Open vSwitch 实验环境配置&lt;/h5>
+&lt;p>OVS 可以安装在主流的 Linux 操作系统中，用户可以选择直接安装编译好的软件包，或者下载源码进行编译安装。 在我们的实验环境中，使用的操作系统是 64 位 Ubuntu Server 12.04.3 LTS，并通过源码编译的方式安装了 Open vSwitch 1.11.0&lt;code>$ lsb\_release -a No LSB modules are available. Distributor ID:Ubuntu Description:Ubuntu 12.04.3 LTS Release:12.04 Codename:precise&lt;/code>OVS 的源码编译安装方式可以参考官方文档 &lt;a href="http://git.openvswitch.org/cgi-bin/gitweb.cgi?p=openvswitch;a=blob_plain;f=INSTALL;hb=HEAD">How to Install Open vSwitch on Linux, FreeBSD and NetBSD&lt;/a>。 安装完毕后，检查 OVS 的运行情况：&lt;code>$ ps -ea | grep ovs 12533 ? 00:00:00 ovs\_workq 12549 ? 00:00:04 ovsdb-server 12565 ? 00:00:48 ovs-vswitchd 12566 ? 00:00:00 ovs-vswitchd&lt;/code>查看 OVS 的版本信息, 我们安装版本的是 1.11.0&lt;code>$ ovs-appctl --version ovs-appctl (Open vSwitch) 1.11.0 Compiled Oct 28 2013 14:17:16&lt;/code>查看 OVS 支持的 OpenFlow 协议的版本```
+$ ovs-ofctl &amp;ndash;version
+ovs-ofctl (Open vSwitch) 1.11.0
+Compiled Oct 28 2013 14:17:17
+OpenFlow versions 0x1:0x4&lt;/p>
+&lt;pre>&lt;code>
+#### 基于 Open vSwitch 的 OpenFlow 实践
+OpenFlow 是用于管理交换机流表的协议，ovs-ofctl 则是 OVS 提供的命令行工具。在没有配置 OpenFlow 控制器的模式下，用户可以使用 ovs-ofctl 命令通过 OpenFlow 协议去连接 OVS，创建、修改或删除 OVS 中的流表项，并对 OVS 的运行状况进行动态监控。
+###### 图 1. OpenFlow 的匹配流程
+##### Flow 语法说明
+在 OpenFlow 的白皮书中，Flow 被定义为某个特定的网络流量。例如，一个 TCP 连接就是一个 Flow，或者从某个 IP 地址发出来的数据包，都可以被认为是一个 Flow。支持 OpenFlow 协议的交换机应该包括一个或者多个流表，流表中的条目包含：数据包头的信息、匹配成功后要执行的指令和统计信息。 当数据包进入 OVS 后，会将数据包和流表中的流表项进行匹配，如果发现了匹配的流表项，则执行该流表项中的指令集。相反，如果数据包在流表中没有发现任何匹配，OVS 会通过控制通道把数据包发到 OpenFlow 控制器中。 在 OVS 中，流表项作为 ovs-ofctl 的参数，采用如下的格式：字段=值。如果有多个字段，可以用逗号或者空格分开。一些常用的字段列举如下：
+###### 表 1. 流表常用字段
+字段名称 说明 in\_port=port 传递数据包的端口的 OpenFlow 端口编号 dl\_vlan=vlan 数据包的 VLAN Tag 值，范围是 0-4095，0xffff 代表不包含 VLAN Tag 的数据包 dl\_src=&amp;lt;MAC&amp;gt; dl\_dst=&amp;lt;MAC&amp;gt; 匹配源或者目标的 MAC 地址 01:00:00:00:00:00/01:00:00:00:00:00 代表广播地址 00:00:00:00:00:00/01:00:00:00:00:00 代表单播地址 dl\_type=ethertype 匹配以太网协议类型，其中： dl\_type=0x0800 代表 IPv4 协议 dl\_type=0x086dd 代表 IPv6 协议 dl\_type=0x0806 代表 ARP 协议 完整的的类型列表可以参见[以太网协议类型列表](http://en.wikipedia.org/wiki/EtherType) nw\_src=ip\[/netmask\] nw\_dst=ip\[/netmask\] 当 dl\_typ=0x0800 时，匹配源或者目标的 IPv4 地址，可以使 IP 地址或者域名 nw\_proto=proto 和 dl\_type 字段协同使用。 当 dl\_type=0x0800 时，匹配 IP 协议编号 当 dl\_type=0x086dd 代表 IPv6 协议编号 完整的 IP 协议编号可以参见[IP 协议编号列表](http://en.wikipedia.org/wiki/List_of_IP_protocol_numbers) table=number 指定要使用的流表的编号，范围是 0-254。在不指定的情况下，默认值为 0。通过使用流表编号，可以创建或者修改多个 Table 中的 Flow reg&amp;lt;idx&amp;gt;=value\[/mask\] 交换机中的寄存器的值。当一个数据包进入交换机时，所有的寄存器都被清零，用户可以通过 Action 的指令修改寄存器中的值 对于 add−flow，add−flows 和 mod−flows 这三个命令，还需要指定要执行的动作：actions=\[target\]\[,target...\] 一个流规则中可能有多个动作，按照指定的先后顺序执行。 常见的操作有：
+* output:port: 输出数据包到指定的端口。port 是指端口的 OpenFlow 端口编号
+* mod\_vlan\_vid: 修改数据包中的 VLAN tag
+* strip\_vlan: 移除数据包中的 VLAN tag
+* mod\_dl\_src/ mod\_dl\_dest: 修改源或者目标的 MAC 地址信息
+* mod\_nw\_src/mod\_nw\_dst: 修改源或者目标的 IPv4 地址信息
+* resubmit:port: 替换流表的 in\_port 字段，并重新进行匹配
+* load:value−&amp;gt;dst\[start..end\]: 写数据到指定的字段
+##### 实践操作 OpenFlow 命令
+在本例中, 我们会创建一个不连接到任何控制器的 OVS 交换机，并演示如何使用 ovs-octl 命令操作 OpenFlow 流表。 创建一个新的 OVS 交换机```
+$ ovs-vsctl add-br ovs-switch
+```创建一个端口 p0，设置端口 p0 的 OpenFlow 端口编号为 100（如果在创建端口的时候没有指定 OpenFlow 端口编号，OVS 会自动生成一个）。```
+$ ovs-vsctl add-port ovs-switch p0 -- set Interface p0 ofport\_request=100
+```设置网络接口设备的类型为“internal”。对于 internal 类型的的网络接口，OVS 会同时在 Linux 系统中创建一个可以用来收发数据的模拟网络设备。我们可以为这个网络设备配置 IP 地址、进行数据监听等等。```
+$ ovs-vsctl set Interface p0 type=internal
+$ ethtool -i p0
+driver: openvswitch
+version:
+firmware-version:
+bus-info:
+supports-statistics: no
+supports-test: no
+supports-eeprom-access: no
+supports-register-dump: no
+```为了避免网络接口上的地址和本机已有网络地址冲突，我们可以创建一个虚拟网络空间 ns0，把 p0 接口移入网络空间 ns0，并配置 IP 地址为 192.168.1.100```
+$ ip netns add ns0
+$ ip link set p0 netns ns0
+$ ip netns exec ns0 ip addr add 192.168.1.100/24 dev p0
+$ ip netns exec ns0 ifconfig p0 promisc up
+```使用同样的方法创建端口 p1、p2
+###### 表 2. 创建的端口信息
+端口 说明 p0 IP 地址: 192.168.1.100/24 网络名称空间: ns0 网络接口 MAC 地址: 66:4e:cc:ae:4d:20 OpenFlow Port Number: 100 p1 IP 地址: 192.168.1.101/24 网络名称空间: ns1 网络接口 MAC 地址: 46:54:8a:95:dd:f8 OpenFlow Port Number: 101 p2 IP 地址: 192.168.1.102/24, 网络名称空间: ns2 网络接口 MAC 地址: 86:3b:c8:d0:44:10 OpenFlow Port Number: 102 创建所有的端口之后， 查看 OVS 交换机的信息```
+$ ovs-vsctl show
+30282710-d401-4187-8e13-52388f693df7
+Bridge ovs-switch
+Port &amp;quot;p0&amp;quot;
+Interface &amp;quot;p0&amp;quot;
+type: internal
+Port &amp;quot;p2&amp;quot;
+Interface &amp;quot;p2&amp;quot;
+type: internal
+Port &amp;quot;p1&amp;quot;
+Interface &amp;quot;p1&amp;quot;
+type: internal
+Port ovs-switch
+Interface ovs-switch
+type: internal
+```使用 ovs-ofctl 创建并测试 OpenFlow 命令
+1. 查看 Open vSwitch 中的端口信息。从输出结果中，可以获得交换机对应的 datapath ID （dpid），以及每个端口的 OpenFlow 端口编号，端口名称，当前状态等等。```
+$ ovs-ofctl show ovs-switch
+OFPT\_FEATURES\_REPLY (xid=0x2): dpid:00001232a237ea45
+n\_tables:254, n\_buffers:256
+capabilities: FLOW\_STATS TABLE\_STATS PORT\_STATS QUEUE\_STATS ARP\_MATCH\_IP
+actions: OUTPUT SET\_VLAN\_VID SET\_VLAN\_PCP STRIP\_VLAN SET\_DL\_SRC SET\_DL\_DST
+SET\_NW\_SRC SET\_NW\_DST SET\_NW\_TOS SET\_TP\_SRC SET\_TP\_DST ENQUEUE
+100(p0): addr:54:01:00:00:00:00
+config: PORT\_DOWN
+state: LINK\_DOWN
+speed: 0 Mbps now, 0 Mbps max
+101(p1): addr:54:01:00:00:00:00
+config: PORT\_DOWN
+state: LINK\_DOWN
+speed: 0 Mbps now, 0 Mbps max
+102(p2): addr:54:01:00:00:00:00
+config: PORT\_DOWN
+state: LINK\_DOWN
+speed: 0 Mbps now, 0 Mbps max
+LOCAL(ovs-switch): addr:12:32:a2:37:ea:45
+config: 0
+state: 0
+speed: 0 Mbps now, 0 Mbps max
+OFPT\_GET\_CONFIG\_REPLY (xid=0x4): frags=normal miss\_send\_len=0
+```如果想获得网络接口的 OpenFlow 编号，也可以在 OVS 的数据库中查询```
+$ ovs-vsctl get Interface p0 ofport
+100
+```查看 datapath 的信息```
+$ ovs-dpctl show
+system@ovs-system:
+lookups: hit:12173 missed:712 lost:0
+flows: 0
+port 0: ovs-system (internal)
+port 1: ovs-switch (internal)
+port 2: p0 (internal)
+port 3: p1 (internal)
+port 4: p2 (internal)
+```
+2. 屏蔽数据包屏蔽所有进入 OVS 的以太网广播数据包```
+$ ovs-ofctl add-flow ovs-switch &amp;quot;table=0, dl\_src=01:00:00:00:00:00/01:00:00:00:00:00, actions=drop&amp;quot;
+```屏蔽 STP 协议的广播数据包```
+$ ovs-ofctl add-flow ovs-switch &amp;quot;table=0, dl\_dst=01:80:c2:00:00:00/ff:ff:ff:ff:ff:f0, actions=drop&amp;quot;
+```
+3. 修改数据包添加新的 OpenFlow 条目，修改从端口 p0 收到的数据包的源地址为 9.181.137.1```
+$ ovs-ofctl add-flow ovs-switch &amp;quot;priority=1 idle\_timeout=0,\\
+in\_port=100,actions=mod\_nw\_src:9.181.137.1,normal&amp;quot;
+```从端口 p0（192.168.1.100）发送测试数据到端口 p1（192.168.1.101）```
+$ ip netns exec ns0 ping 192.168.1.101
+```在接收端口 p1 监控数据，发现接收到的数据包的来源已经被修改为 9.181.137.1```
+$ ip netns exec ns1 tcpdump -i p1 icmp
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on p1, link-type EN10MB (Ethernet), capture size 65535 bytes
+15:59:16.885770 IP 9.181.137.1 &amp;gt; 192.168.1.101: ICMP echo request, id 23111, seq 457, length 64
+15:59:17.893809 IP 9.181.137.1 &amp;gt; 192.168.1.101: ICMP echo request, id 23111, seq 458, length 64
+```
+4. 重定向数据包添加新的 OpenFlow 条目，重定向所有的 ICMP 数据包到端口 p2```
+$ ovs-ofctl add-flow ovs-switch idle\_timeout=0,dl\_type=0x0800,nw\_proto=1,actions=output:102
+```从端口 p0 （192.168.1.100）发送数据到端口 p1（192.168.1.101）```
+$ ip netns exec ns0 ping 192.168.1.101
+```在端口 p2 上监控数据，发现数据包已被转发到端口 p2```
+$ ip netns exec ns3 tcpdump -i p2 icmp
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on p2, link-type EN10MB (Ethernet), capture size 65535 bytes
+16:07:35.677770 IP 192.168.1.100 &amp;gt; 192.168.1.101: ICMP echo request, id 23147, seq 25, length 64
+16:07:36.685824 IP 192.168.1.100 &amp;gt; 192.168.1.101: ICMP echo request, id 23147, seq 26, length 64
+```
+5. 修改数据包的 VLAN Tag除了使用“ping”、“tcpdump”和“iperf” 等 Linux 命令以外，我们也可以使用 OVS 提供的 ovs-appctl ofproto/trace 工具来测试 OVS 对数据包的转发状况。ovs-appctl ofproto/trace 可以用来生成测试用的模拟数据包，并一步步的展示 OVS 对数据包的流处理过程。在以下的例子中，我们演示一下如何使用这个命令： 修改端口 p1 的 VLAN tag 为 101，使端口 p1 成为一个隶属于 VLAN 101 的端口```
+$ ovs-vsctl set Port p1 tag=101
+```现在由于端口 p0 和 p1 属于不同的 VLAN，它们之间无法进行数据交换。我们使用 ovs-appctl ofproto/trace 生成一个从端口 p0 发送到端口 p1 的数据包，这个数据包不包含任何 VLAN tag，并观察 OVS 的处理过程```
+$ ovs-appctl ofproto/trace ovs-switch in\_port=100,dl\_src=66:4e:cc:ae:4d:20,
+dl\_dst=46:54:8a:95:dd:f8 -generate
+Flow:metadata=0,in\_port=100,vlan\_tci=0x0000,dl\_src=66:4e:cc:ae:4d:20,
+dl\_dst=46:54:8a:95:dd:f8,dl\_type=0x0000
+Rule: table=0 cookie=0 priority=0
+OpenFlow actions=NORMAL
+no learned MAC for destination, flooding
+Final flow: unchanged
+Relevant fields: skb\_priority=0,in\_port=100,vlan\_tci=0x0000/0x1fff,\\
+dl\_src=66:4e:cc:ae:4d:20,dl\_dst=46:54:8a:95:dd:f8,dl\_type=0x0000,nw\_frag=no
+Datapath actions: 4,1
+```在第一行输出中，“Flow:”之后的字段描述了输入的流的信息。由于我们没有指定太多信息，所以多数字段 （例如 dl\_type 和 vlan\_tci）被 OVS 设置为空值。 在第二行的输出中，“Rule:” 之后的字段描述了匹配成功的流表项。 在第三行的输出中，“OpenFlow actions”之后的字段描述了实际执行的操作。 最后一段以”Final flow”开始的字段是整个处理过程的总结，“Datapath actions: 4,1”代表数据包被发送到 datapath 的 4 和 1 号端口。 创建一条新的 Flow：对于从端口 p0 进入交换机的数据包，如果它不包含任何 VLAN tag，则自动为它添加 VLAN tag 101```
+$ ovs-ofctl add-flow ovs-switch &amp;quot;priority=3,in\_port=100,dl\_vlan=0xffff,\\
+actions=mod\_vlan\_vid:101,normal&amp;quot;
+```再次尝试从端口 p0 发送一个不包含任何 VLAN tag 的数据包，发现数据包进入端口 p0 之后, 会被加上 VLAN tag101, 同时转发到端口 p1 上```
+$ ovs-appctl ofproto/trace ovs-switch in\_port=100,dl\_src=66:4e:cc:ae:4d:20,
+dl\_dst=46:54:8a:95:dd:f8 –generate
+Flow: metadata=0,in\_port=100,vlan\_tci=0x0000,dl\_src=66:4e:cc:ae:4d:20,
+dl\_dst=46:54:8a:95:dd:f8,dl\_type=0x0000
+Rule: table=0 cookie=0 priority=3,in\_port=100,vlan\_tci=0x0000
+OpenFlow actions=mod\_vlan\_vid:101,NORMAL
+forwarding to learned port
+Final flow: metadata=0,in\_port=100,dl\_vlan=101,dl\_vlan\_pcp=0,dl\_src=66:4e:cc:ae:4d:20,
+dl\_dst=46:54:8a:95:dd:f8,dl\_type=0x0000
+Relevant fields: skb\_priority=0,in\_port=100,vlan\_tci=0x0000/0x1fff,dl\_src=66:4e:cc:ae:4d:20,
+dl\_dst=46:54:8a:95:dd:f8,dl\_type=0x0000,nw\_frag=no
+Datapath actions: 3
+```反过来从端口 p1 发送数据包，由于 p1 现在是带有 VLAN tag 101 的 Access 类型的端口，所以数据包进入端口 p1 之后，会被 OVS 添加 VLAN tag 101 并发送到端口 p0```
+$ ovs-appctl ofproto/trace ovs-switch in\_port=101,dl\_dst=66:4e:cc:ae:4d:20,
+dl\_src=46:54:8a:95:dd:f8 -generate
+Flow: metadata=0,in\_port=101,vlan\_tci=0x0000,dl\_src=46:54:8a:95:dd:f8,
+dl\_dst=66:4e:cc:ae:4d:20,dl\_type=0x0000
+Rule: table=0 cookie=0 priority=0
+OpenFlow actions=NORMAL
+forwarding to learned port
+Final flow: unchanged
+Relevant fields: skb\_priority=0,in\_port=101,vlan\_tci=0x0000,dl\_src=46:54:8a:95:dd:f8,
+dl\_dst=66:4e:cc:ae:4d:20,dl\_type=0x0000,nw\_frag=no
+Datapath actions: push\_vlan(vid=101,pcp=0),2
+```
+6. 其他 OpenFlow 常用的操作查看交换机中的所有 Table```
+ovs-ofctl dump-tables ovs-switch
+```查看交换机中的所有流表项```
+ovs−ofctl dump−flows ovs-switch
+```删除编号为 100 的端口上的所有流表项```
+ovs-ofctl del-flows ovs-switch &amp;quot;in\_port=100&amp;quot;
+```查看交换机上的端口信息```
+ovs-ofctl show ovs-switch
+```
+#### 通过 Floodlight 管理 OVS
+一方面，OpenFlow 控制器可以通过 OpenFlow 协议连接到任何支持 OpenFlow 的交换机，控制器通过和交换机交换流表规则来控制数据流向。另一方面， OpenFlow 控制器向用户提供的界面或者接口，用户可以通过界面对网络架构进行动态的修改，修改交换机的流表规则等等。Floodlight 是一个基于 Apache 协议，使用 Java 开发的企业级 OpenFlow 控制器。我们在下面的例子中演示如何安装 Floodlight，并连接管理 OVS 的过程。 Floodlight 的安装过程非常简单，在另外一台机器上, 下载 Floodlight 源码并编译```
+$ git clone git://github.com/floodlight/floodlight.git
+$ cd floodlight/
+$ ant
+$ java -jar target/floodlight.jar
+```运行 Floodlight```
+$ java -jar floodlight.jar
+```在安装了 OVS 交换机的节点上，配置 OVS 交换机 ovs-switch，使用 Floodlight 作为控制器。默认情况下，Floodlight 在端口 6633 上进行监听，我们使用 ovs-vsctl 命令配置 OVS 交换机使用 TCP 协议连接到 Floodlight（IP 地址为 9.181.137.182，端口号 6633）。对于一个 OVS 交换机来说，可以同时配置一个或者多个控制器 $ ovs-vsctl set-controller ovs-switch tcp:9.181.137.182:6633 当 OVS 交换机连接到 Floodlight 控制器后，理论上所有的流表规则应该交给控制器来建立。由于 OVS 交换机和控制器之间是通过网络通讯来传递数据的，所以网络连接失败会影响到 Flow 的建立。针对这种情况，OVS 提供了两种处理模式：
+* standlone: 默认模式。如果 OVS 交换机超过三次无法正常连接到 OpenFlow 控制器，OVS 交换机自己会负责建立流表。在这种模式下，OVS 和常见的 L2 交换机相似。与此同时，OVS 也会继续尝试连接控制器，一旦网络连接恢复，OVS 会再次切换到使用控制器进行流表管理。
+* secure: 在 secure 模式下，如果 OVS 无法正常连接到 OpenFlow 控制器，OVS 会不停的尝试与控制器重新建立连接，而不会自己负责建立流表。
+设置 OVS 的连接模式为 secure 模式```
+$ ovs-vsctl set Bridge ovs-switch fail-mode=secure
+```查看 OVS 的状态，“is\_connected:true”代表 OVS 已经成功连接到了 Floodlight```
+$ ovs-vsctl show
+30282710-d401-4187-8e13-52388f693df7
+Bridge ovs-switch
+Controller &amp;quot;tcp:9.181.137.182:6633&amp;quot;
+is\_connected: true
+Port ovs-switch
+Interface ovs-switch
+type: internal
+Port &amp;quot;p0&amp;quot;
+Interface &amp;quot;p0&amp;quot;
+type: internal
+Port &amp;quot;p1&amp;quot;
+tag: 101
+Interface &amp;quot;p1&amp;quot;
+type: internal
+Port &amp;quot;p2&amp;quot;
+Interface &amp;quot;p2&amp;quot;
+type: internal
+```通过访问 Floodlight 提供的 Web 管理界面 http://&amp;lt;Host Address&amp;gt;:8080/ui/index.html，我们可以查看 Floodlight 控制器的状态以及所有连接到 Floodlight 的交换机列表
+###### 图 2. Floodlight 主界面
+选中某个 OpenFlow 交换机， 查看其中的端口列表和流表信息
+###### 图 3. 查看 OpenFlow 交换机的详细信息
+通过 Floodlight 的 RESTAPI，添加两条新的规则让端口 p0 和 p1 可以相互通讯。注意：替换命令行中的 switch 的 ID 为交换机的 datapath ID```
+curl -d '{&amp;quot;switch&amp;quot;: &amp;quot;00:00:0e:f9:05:6b:7c:44&amp;quot;, &amp;quot;name&amp;quot;:&amp;quot;my-flow1&amp;quot;, &amp;quot;cookie&amp;quot;:&amp;quot;0&amp;quot;,&amp;quot;priority&amp;quot;:&amp;quot;32768&amp;quot;,
+&amp;quot;ingress-port&amp;quot;:&amp;quot;100&amp;quot;,&amp;quot;active&amp;quot;:&amp;quot;true&amp;quot;, &amp;quot;actions&amp;quot;:&amp;quot;output=flood&amp;quot;}'
+http://9.181.137.182:8080/wm/staticflowentrypusher/json
+curl -d '{&amp;quot;switch&amp;quot;: &amp;quot;00:00:0e:f9:05:6b:7c:44&amp;quot;, &amp;quot;name&amp;quot;:&amp;quot;my-flow2&amp;quot;, &amp;quot;cookie&amp;quot;:&amp;quot;0&amp;quot;,&amp;quot;priority&amp;quot;:&amp;quot;32768&amp;quot;,
+&amp;quot;ingress-port&amp;quot;:&amp;quot;101&amp;quot;,&amp;quot;active&amp;quot;:&amp;quot;true&amp;quot;, &amp;quot;actions&amp;quot;:&amp;quot;output=flood&amp;quot;}'
+http://9.181.137.182:8080/wm/staticflowentrypusher/json
+```验证是否能从端口 p0 发送数据包到 p1```
+$ ip netns exec ns0 ping -c4 192.168.1.101
+PING 192.168.1.101 (192.168.1.101) 56(84) bytes of data.
+64 bytes from 192.168.1.101: icmp\_req=1 ttl=64 time=0.027 ms
+64 bytes from 192.168.1.101: icmp\_req=2 ttl=64 time=0.018 ms
+64 bytes from 192.168.1.101: icmp\_req=3 ttl=64 time=0.023 ms
+64 bytes from 192.168.1.101: icmp\_req=4 ttl=64 time=0.022 ms
+--- 192.168.1.101 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 2998ms
+rtt min/avg/max/mdev = 0.018/0.022/0.027/0.005 ms
+```在 OVS 端也可以看到，流表规则已经被 OVS 同步到本地。```
+$ ovs-ofctl dump-flows ovs-switch
+NXST\_FLOW reply (xid=0x4):
+cookie=0xa0000000000000, duration=335.122s, table=0, n\_packets=347, n\_bytes=28070,
+idle\_age=1, in\_port=100 actions=FLOOD
+cookie=0xa0000000000000, duration=239.892s, table=0, n\_packets=252, n\_bytes=24080,
+idle\_age=0, in\_port=101 actions=FLOOD
+```通过 Floodlight 的 RestAPI，查看交换机上的流表规则```
+curl http://9.181.137.182:8080/wm/staticflowentrypusher/list/00:00:0e:f9:05:6b:7c:44/json
+```通过 Floodlight 的 RestAPI，删除交换机上的流表规则```
+curl [http://9.181.137.182:8080/wm/staticflowentrypusher/clear/00:00:0e:f9:05:6b:7c:44/json](http://9.181.137.182:8080/wm/staticflowentrypusher/clear/00:00:0e:f9:05:6b:7c:44/json)
+&lt;/code>&lt;/pre>&lt;h4 id="总结">总结&lt;/h4>
+&lt;p>通过本文的讲述和实验，我们了解了 Open vSwitch 以及 OpenFlow 的基本概念，以及通过 OpenFlow 协议修改 Open vSwitch 中的流表项，最后演示了如何使用 Floodlight 连接 Open vSwitch 并进行管理。&lt;/p>
+- /posts/%e8%bd%ac%e5%9f%ba%e4%ba%8e-open-vswitch-%e7%9a%84-openflow-%e5%ae%9e%e8%b7%b5-2/ - This is a customized copyright.</description></item><item><title>[转]基于 Open vSwitch 的 OpenFlow 实践</title><link>/posts/%e8%bd%ac%e5%9f%ba%e4%ba%8e-open-vswitch-%e7%9a%84-openflow-%e5%ae%9e%e8%b7%b5/</link><pubDate>Tue, 06 Dec 2016 08:22:52 +0000</pubDate><guid>/posts/%e8%bd%ac%e5%9f%ba%e4%ba%8e-open-vswitch-%e7%9a%84-openflow-%e5%ae%9e%e8%b7%b5/</guid><description>seteuid0's blog /posts/%e8%bd%ac%e5%9f%ba%e4%ba%8e-open-vswitch-%e7%9a%84-openflow-%e5%ae%9e%e8%b7%b5/ -&lt;h4 id="open-vswitch-概述">Open vSwitch 概述&lt;/h4>
+&lt;p>Open vSwitch（下面简称为 OVS）是由 Nicira Networks 主导的，运行在虚拟化平台（例如 KVM，Xen）上的虚拟交换机。在虚拟化平台上，OVS 可以为动态变化的端点提供 2 层交换功能，很好的控制虚拟网络中的访问策略、网络隔离、流量监控等等。 OVS 遵循 Apache 2.0 许可证, 能同时支持多种标准的管理接口和协议。OVS 也提供了对 OpenFlow 协议的支持，用户可以使用任何支持 OpenFlow 协议的控制器对 OVS 进行远程管理控制。&lt;/p>
+&lt;h5 id="open-vswitch-概述-1">Open vSwitch 概述&lt;/h5>
+&lt;p>在 OVS 中, 有几个非常重要的概念：&lt;/p>
+&lt;ul>
+&lt;li>Bridge: Bridge 代表一个以太网交换机（Switch），一个主机中可以创建一个或者多个 Bridge 设备。&lt;/li>
+&lt;li>Port: 端口与物理交换机的端口概念类似，每个 Port 都隶属于一个 Bridge。&lt;/li>
+&lt;li>Interface: 连接到 Port 的网络接口设备。在通常情况下，Port 和 Interface 是一对一的关系, 只有在配置 Port 为 bond 模式后，Port 和 Interface 是一对多的关系。&lt;/li>
+&lt;li>Controller: OpenFlow 控制器。OVS 可以同时接受一个或者多个 OpenFlow 控制器的管理。&lt;/li>
+&lt;li>datapath: 在 OVS 中，datapath 负责执行数据交换，也就是把从接收端口收到的数据包在流表中进行匹配，并执行匹配到的动作。&lt;/li>
+&lt;li>Flow table: 每个 datapath 都和一个“flow table”关联，当 datapath 接收到数据之后， OVS 会在 flow table 中查找可以匹配的 flow，执行对应的操作, 例如转发数据到另外的端口。&lt;/li>
+&lt;/ul>
+&lt;h5 id="open-vswitch-实验环境配置">Open vSwitch 实验环境配置&lt;/h5>
+&lt;p>OVS 可以安装在主流的 Linux 操作系统中，用户可以选择直接安装编译好的软件包，或者下载源码进行编译安装。 在我们的实验环境中，使用的操作系统是 64 位 Ubuntu Server 12.04.3 LTS，并通过源码编译的方式安装了 Open vSwitch 1.11.0&lt;code>$ lsb\_release -a No LSB modules are available. Distributor ID:Ubuntu Description:Ubuntu 12.04.3 LTS Release:12.04 Codename:precise&lt;/code>OVS 的源码编译安装方式可以参考官方文档 &lt;a href="http://git.openvswitch.org/cgi-bin/gitweb.cgi?p=openvswitch;a=blob_plain;f=INSTALL;hb=HEAD">How to Install Open vSwitch on Linux, FreeBSD and NetBSD&lt;/a>。 安装完毕后，检查 OVS 的运行情况：&lt;code>$ ps -ea | grep ovs 12533 ? 00:00:00 ovs\_workq 12549 ? 00:00:04 ovsdb-server 12565 ? 00:00:48 ovs-vswitchd 12566 ? 00:00:00 ovs-vswitchd&lt;/code>查看 OVS 的版本信息, 我们安装版本的是 1.11.0&lt;code>$ ovs-appctl --version ovs-appctl (Open vSwitch) 1.11.0 Compiled Oct 28 2013 14:17:16&lt;/code>查看 OVS 支持的 OpenFlow 协议的版本```
+$ ovs-ofctl &amp;ndash;version
+ovs-ofctl (Open vSwitch) 1.11.0
+Compiled Oct 28 2013 14:17:17
+OpenFlow versions 0x1:0x4&lt;/p>
+&lt;pre>&lt;code>
+#### 基于 Open vSwitch 的 OpenFlow 实践
+OpenFlow 是用于管理交换机流表的协议，ovs-ofctl 则是 OVS 提供的命令行工具。在没有配置 OpenFlow 控制器的模式下，用户可以使用 ovs-ofctl 命令通过 OpenFlow 协议去连接 OVS，创建、修改或删除 OVS 中的流表项，并对 OVS 的运行状况进行动态监控。
+###### 图 1. OpenFlow 的匹配流程
+##### Flow 语法说明
+在 OpenFlow 的白皮书中，Flow 被定义为某个特定的网络流量。例如，一个 TCP 连接就是一个 Flow，或者从某个 IP 地址发出来的数据包，都可以被认为是一个 Flow。支持 OpenFlow 协议的交换机应该包括一个或者多个流表，流表中的条目包含：数据包头的信息、匹配成功后要执行的指令和统计信息。 当数据包进入 OVS 后，会将数据包和流表中的流表项进行匹配，如果发现了匹配的流表项，则执行该流表项中的指令集。相反，如果数据包在流表中没有发现任何匹配，OVS 会通过控制通道把数据包发到 OpenFlow 控制器中。 在 OVS 中，流表项作为 ovs-ofctl 的参数，采用如下的格式：字段=值。如果有多个字段，可以用逗号或者空格分开。一些常用的字段列举如下：
+###### 表 1. 流表常用字段
+字段名称 说明 in\_port=port 传递数据包的端口的 OpenFlow 端口编号 dl\_vlan=vlan 数据包的 VLAN Tag 值，范围是 0-4095，0xffff 代表不包含 VLAN Tag 的数据包 dl\_src=&amp;lt;MAC&amp;gt; dl\_dst=&amp;lt;MAC&amp;gt; 匹配源或者目标的 MAC 地址 01:00:00:00:00:00/01:00:00:00:00:00 代表广播地址 00:00:00:00:00:00/01:00:00:00:00:00 代表单播地址 dl\_type=ethertype 匹配以太网协议类型，其中： dl\_type=0x0800 代表 IPv4 协议 dl\_type=0x086dd 代表 IPv6 协议 dl\_type=0x0806 代表 ARP 协议 完整的的类型列表可以参见[以太网协议类型列表](http://en.wikipedia.org/wiki/EtherType) nw\_src=ip\[/netmask\] nw\_dst=ip\[/netmask\] 当 dl\_typ=0x0800 时，匹配源或者目标的 IPv4 地址，可以使 IP 地址或者域名 nw\_proto=proto 和 dl\_type 字段协同使用。 当 dl\_type=0x0800 时，匹配 IP 协议编号 当 dl\_type=0x086dd 代表 IPv6 协议编号 完整的 IP 协议编号可以参见[IP 协议编号列表](http://en.wikipedia.org/wiki/List_of_IP_protocol_numbers) table=number 指定要使用的流表的编号，范围是 0-254。在不指定的情况下，默认值为 0。通过使用流表编号，可以创建或者修改多个 Table 中的 Flow reg&amp;lt;idx&amp;gt;=value\[/mask\] 交换机中的寄存器的值。当一个数据包进入交换机时，所有的寄存器都被清零，用户可以通过 Action 的指令修改寄存器中的值 对于 add−flow，add−flows 和 mod−flows 这三个命令，还需要指定要执行的动作：actions=\[target\]\[,target...\] 一个流规则中可能有多个动作，按照指定的先后顺序执行。 常见的操作有：
+* output:port: 输出数据包到指定的端口。port 是指端口的 OpenFlow 端口编号
+* mod\_vlan\_vid: 修改数据包中的 VLAN tag
+* strip\_vlan: 移除数据包中的 VLAN tag
+* mod\_dl\_src/ mod\_dl\_dest: 修改源或者目标的 MAC 地址信息
+* mod\_nw\_src/mod\_nw\_dst: 修改源或者目标的 IPv4 地址信息
+* resubmit:port: 替换流表的 in\_port 字段，并重新进行匹配
+* load:value−&amp;gt;dst\[start..end\]: 写数据到指定的字段
+##### 实践操作 OpenFlow 命令
+在本例中, 我们会创建一个不连接到任何控制器的 OVS 交换机，并演示如何使用 ovs-octl 命令操作 OpenFlow 流表。 创建一个新的 OVS 交换机```
+$ ovs-vsctl add-br ovs-switch
+```创建一个端口 p0，设置端口 p0 的 OpenFlow 端口编号为 100（如果在创建端口的时候没有指定 OpenFlow 端口编号，OVS 会自动生成一个）。```
+$ ovs-vsctl add-port ovs-switch p0 -- set Interface p0 ofport\_request=100
+```设置网络接口设备的类型为“internal”。对于 internal 类型的的网络接口，OVS 会同时在 Linux 系统中创建一个可以用来收发数据的模拟网络设备。我们可以为这个网络设备配置 IP 地址、进行数据监听等等。```
+$ ovs-vsctl set Interface p0 type=internal
+$ ethtool -i p0
+driver: openvswitch
+version:
+firmware-version:
+bus-info:
+supports-statistics: no
+supports-test: no
+supports-eeprom-access: no
+supports-register-dump: no
+```为了避免网络接口上的地址和本机已有网络地址冲突，我们可以创建一个虚拟网络空间 ns0，把 p0 接口移入网络空间 ns0，并配置 IP 地址为 192.168.1.100```
+$ ip netns add ns0
+$ ip link set p0 netns ns0
+$ ip netns exec ns0 ip addr add 192.168.1.100/24 dev p0
+$ ip netns exec ns0 ifconfig p0 promisc up
+```使用同样的方法创建端口 p1、p2
+###### 表 2. 创建的端口信息
+端口 说明 p0 IP 地址: 192.168.1.100/24 网络名称空间: ns0 网络接口 MAC 地址: 66:4e:cc:ae:4d:20 OpenFlow Port Number: 100 p1 IP 地址: 192.168.1.101/24 网络名称空间: ns1 网络接口 MAC 地址: 46:54:8a:95:dd:f8 OpenFlow Port Number: 101 p2 IP 地址: 192.168.1.102/24, 网络名称空间: ns2 网络接口 MAC 地址: 86:3b:c8:d0:44:10 OpenFlow Port Number: 102 创建所有的端口之后， 查看 OVS 交换机的信息```
+$ ovs-vsctl show
+30282710-d401-4187-8e13-52388f693df7
+Bridge ovs-switch
+Port &amp;quot;p0&amp;quot;
+Interface &amp;quot;p0&amp;quot;
+type: internal
+Port &amp;quot;p2&amp;quot;
+Interface &amp;quot;p2&amp;quot;
+type: internal
+Port &amp;quot;p1&amp;quot;
+Interface &amp;quot;p1&amp;quot;
+type: internal
+Port ovs-switch
+Interface ovs-switch
+type: internal
+```使用 ovs-ofctl 创建并测试 OpenFlow 命令
+1. 查看 Open vSwitch 中的端口信息。从输出结果中，可以获得交换机对应的 datapath ID （dpid），以及每个端口的 OpenFlow 端口编号，端口名称，当前状态等等。```
+$ ovs-ofctl show ovs-switch
+OFPT\_FEATURES\_REPLY (xid=0x2): dpid:00001232a237ea45
+n\_tables:254, n\_buffers:256
+capabilities: FLOW\_STATS TABLE\_STATS PORT\_STATS QUEUE\_STATS ARP\_MATCH\_IP
+actions: OUTPUT SET\_VLAN\_VID SET\_VLAN\_PCP STRIP\_VLAN SET\_DL\_SRC SET\_DL\_DST
+SET\_NW\_SRC SET\_NW\_DST SET\_NW\_TOS SET\_TP\_SRC SET\_TP\_DST ENQUEUE
+100(p0): addr:54:01:00:00:00:00
+config: PORT\_DOWN
+state: LINK\_DOWN
+speed: 0 Mbps now, 0 Mbps max
+101(p1): addr:54:01:00:00:00:00
+config: PORT\_DOWN
+state: LINK\_DOWN
+speed: 0 Mbps now, 0 Mbps max
+102(p2): addr:54:01:00:00:00:00
+config: PORT\_DOWN
+state: LINK\_DOWN
+speed: 0 Mbps now, 0 Mbps max
+LOCAL(ovs-switch): addr:12:32:a2:37:ea:45
+config: 0
+state: 0
+speed: 0 Mbps now, 0 Mbps max
+OFPT\_GET\_CONFIG\_REPLY (xid=0x4): frags=normal miss\_send\_len=0
+```如果想获得网络接口的 OpenFlow 编号，也可以在 OVS 的数据库中查询```
+$ ovs-vsctl get Interface p0 ofport
+100
+```查看 datapath 的信息```
+$ ovs-dpctl show
+system@ovs-system:
+lookups: hit:12173 missed:712 lost:0
+flows: 0
+port 0: ovs-system (internal)
+port 1: ovs-switch (internal)
+port 2: p0 (internal)
+port 3: p1 (internal)
+port 4: p2 (internal)
+```
+2. 屏蔽数据包屏蔽所有进入 OVS 的以太网广播数据包```
+$ ovs-ofctl add-flow ovs-switch &amp;quot;table=0, dl\_src=01:00:00:00:00:00/01:00:00:00:00:00, actions=drop&amp;quot;
+```屏蔽 STP 协议的广播数据包```
+$ ovs-ofctl add-flow ovs-switch &amp;quot;table=0, dl\_dst=01:80:c2:00:00:00/ff:ff:ff:ff:ff:f0, actions=drop&amp;quot;
+```
+3. 修改数据包添加新的 OpenFlow 条目，修改从端口 p0 收到的数据包的源地址为 9.181.137.1```
+$ ovs-ofctl add-flow ovs-switch &amp;quot;priority=1 idle\_timeout=0,\\
+in\_port=100,actions=mod\_nw\_src:9.181.137.1,normal&amp;quot;
+```从端口 p0（192.168.1.100）发送测试数据到端口 p1（192.168.1.101）```
+$ ip netns exec ns0 ping 192.168.1.101
+```在接收端口 p1 监控数据，发现接收到的数据包的来源已经被修改为 9.181.137.1```
+$ ip netns exec ns1 tcpdump -i p1 icmp
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on p1, link-type EN10MB (Ethernet), capture size 65535 bytes
+15:59:16.885770 IP 9.181.137.1 &amp;gt; 192.168.1.101: ICMP echo request, id 23111, seq 457, length 64
+15:59:17.893809 IP 9.181.137.1 &amp;gt; 192.168.1.101: ICMP echo request, id 23111, seq 458, length 64
+```
+4. 重定向数据包添加新的 OpenFlow 条目，重定向所有的 ICMP 数据包到端口 p2```
+$ ovs-ofctl add-flow ovs-switch idle\_timeout=0,dl\_type=0x0800,nw\_proto=1,actions=output:102
+```从端口 p0 （192.168.1.100）发送数据到端口 p1（192.168.1.101）```
+$ ip netns exec ns0 ping 192.168.1.101
+```在端口 p2 上监控数据，发现数据包已被转发到端口 p2```
+$ ip netns exec ns3 tcpdump -i p2 icmp
+tcpdump: verbose output suppressed, use -v or -vv for full protocol decode
+listening on p2, link-type EN10MB (Ethernet), capture size 65535 bytes
+16:07:35.677770 IP 192.168.1.100 &amp;gt; 192.168.1.101: ICMP echo request, id 23147, seq 25, length 64
+16:07:36.685824 IP 192.168.1.100 &amp;gt; 192.168.1.101: ICMP echo request, id 23147, seq 26, length 64
+```
+5. 修改数据包的 VLAN Tag除了使用“ping”、“tcpdump”和“iperf” 等 Linux 命令以外，我们也可以使用 OVS 提供的 ovs-appctl ofproto/trace 工具来测试 OVS 对数据包的转发状况。ovs-appctl ofproto/trace 可以用来生成测试用的模拟数据包，并一步步的展示 OVS 对数据包的流处理过程。在以下的例子中，我们演示一下如何使用这个命令： 修改端口 p1 的 VLAN tag 为 101，使端口 p1 成为一个隶属于 VLAN 101 的端口```
+$ ovs-vsctl set Port p1 tag=101
+```现在由于端口 p0 和 p1 属于不同的 VLAN，它们之间无法进行数据交换。我们使用 ovs-appctl ofproto/trace 生成一个从端口 p0 发送到端口 p1 的数据包，这个数据包不包含任何 VLAN tag，并观察 OVS 的处理过程```
+$ ovs-appctl ofproto/trace ovs-switch in\_port=100,dl\_src=66:4e:cc:ae:4d:20,
+dl\_dst=46:54:8a:95:dd:f8 -generate
+Flow:metadata=0,in\_port=100,vlan\_tci=0x0000,dl\_src=66:4e:cc:ae:4d:20,
+dl\_dst=46:54:8a:95:dd:f8,dl\_type=0x0000
+Rule: table=0 cookie=0 priority=0
+OpenFlow actions=NORMAL
+no learned MAC for destination, flooding
+Final flow: unchanged
+Relevant fields: skb\_priority=0,in\_port=100,vlan\_tci=0x0000/0x1fff,\\
+dl\_src=66:4e:cc:ae:4d:20,dl\_dst=46:54:8a:95:dd:f8,dl\_type=0x0000,nw\_frag=no
+Datapath actions: 4,1
+```在第一行输出中，“Flow:”之后的字段描述了输入的流的信息。由于我们没有指定太多信息，所以多数字段 （例如 dl\_type 和 vlan\_tci）被 OVS 设置为空值。 在第二行的输出中，“Rule:” 之后的字段描述了匹配成功的流表项。 在第三行的输出中，“OpenFlow actions”之后的字段描述了实际执行的操作。 最后一段以”Final flow”开始的字段是整个处理过程的总结，“Datapath actions: 4,1”代表数据包被发送到 datapath 的 4 和 1 号端口。 创建一条新的 Flow：对于从端口 p0 进入交换机的数据包，如果它不包含任何 VLAN tag，则自动为它添加 VLAN tag 101```
+$ ovs-ofctl add-flow ovs-switch &amp;quot;priority=3,in\_port=100,dl\_vlan=0xffff,\\
+actions=mod\_vlan\_vid:101,normal&amp;quot;
+```再次尝试从端口 p0 发送一个不包含任何 VLAN tag 的数据包，发现数据包进入端口 p0 之后, 会被加上 VLAN tag101, 同时转发到端口 p1 上```
+$ ovs-appctl ofproto/trace ovs-switch in\_port=100,dl\_src=66:4e:cc:ae:4d:20,
+dl\_dst=46:54:8a:95:dd:f8 –generate
+Flow: metadata=0,in\_port=100,vlan\_tci=0x0000,dl\_src=66:4e:cc:ae:4d:20,
+dl\_dst=46:54:8a:95:dd:f8,dl\_type=0x0000
+Rule: table=0 cookie=0 priority=3,in\_port=100,vlan\_tci=0x0000
+OpenFlow actions=mod\_vlan\_vid:101,NORMAL
+forwarding to learned port
+Final flow: metadata=0,in\_port=100,dl\_vlan=101,dl\_vlan\_pcp=0,dl\_src=66:4e:cc:ae:4d:20,
+dl\_dst=46:54:8a:95:dd:f8,dl\_type=0x0000
+Relevant fields: skb\_priority=0,in\_port=100,vlan\_tci=0x0000/0x1fff,dl\_src=66:4e:cc:ae:4d:20,
+dl\_dst=46:54:8a:95:dd:f8,dl\_type=0x0000,nw\_frag=no
+Datapath actions: 3
+```反过来从端口 p1 发送数据包，由于 p1 现在是带有 VLAN tag 101 的 Access 类型的端口，所以数据包进入端口 p1 之后，会被 OVS 添加 VLAN tag 101 并发送到端口 p0```
+$ ovs-appctl ofproto/trace ovs-switch in\_port=101,dl\_dst=66:4e:cc:ae:4d:20,
+dl\_src=46:54:8a:95:dd:f8 -generate
+Flow: metadata=0,in\_port=101,vlan\_tci=0x0000,dl\_src=46:54:8a:95:dd:f8,
+dl\_dst=66:4e:cc:ae:4d:20,dl\_type=0x0000
+Rule: table=0 cookie=0 priority=0
+OpenFlow actions=NORMAL
+forwarding to learned port
+Final flow: unchanged
+Relevant fields: skb\_priority=0,in\_port=101,vlan\_tci=0x0000,dl\_src=46:54:8a:95:dd:f8,
+dl\_dst=66:4e:cc:ae:4d:20,dl\_type=0x0000,nw\_frag=no
+Datapath actions: push\_vlan(vid=101,pcp=0),2
+```
+6. 其他 OpenFlow 常用的操作查看交换机中的所有 Table```
+ovs-ofctl dump-tables ovs-switch
+```查看交换机中的所有流表项```
+ovs−ofctl dump−flows ovs-switch
+```删除编号为 100 的端口上的所有流表项```
+ovs-ofctl del-flows ovs-switch &amp;quot;in\_port=100&amp;quot;
+```查看交换机上的端口信息```
+ovs-ofctl show ovs-switch
+```
+#### 通过 Floodlight 管理 OVS
+一方面，OpenFlow 控制器可以通过 OpenFlow 协议连接到任何支持 OpenFlow 的交换机，控制器通过和交换机交换流表规则来控制数据流向。另一方面， OpenFlow 控制器向用户提供的界面或者接口，用户可以通过界面对网络架构进行动态的修改，修改交换机的流表规则等等。Floodlight 是一个基于 Apache 协议，使用 Java 开发的企业级 OpenFlow 控制器。我们在下面的例子中演示如何安装 Floodlight，并连接管理 OVS 的过程。 Floodlight 的安装过程非常简单，在另外一台机器上, 下载 Floodlight 源码并编译```
+$ git clone git://github.com/floodlight/floodlight.git
+$ cd floodlight/
+$ ant
+$ java -jar target/floodlight.jar
+```运行 Floodlight```
+$ java -jar floodlight.jar
+```在安装了 OVS 交换机的节点上，配置 OVS 交换机 ovs-switch，使用 Floodlight 作为控制器。默认情况下，Floodlight 在端口 6633 上进行监听，我们使用 ovs-vsctl 命令配置 OVS 交换机使用 TCP 协议连接到 Floodlight（IP 地址为 9.181.137.182，端口号 6633）。对于一个 OVS 交换机来说，可以同时配置一个或者多个控制器 $ ovs-vsctl set-controller ovs-switch tcp:9.181.137.182:6633 当 OVS 交换机连接到 Floodlight 控制器后，理论上所有的流表规则应该交给控制器来建立。由于 OVS 交换机和控制器之间是通过网络通讯来传递数据的，所以网络连接失败会影响到 Flow 的建立。针对这种情况，OVS 提供了两种处理模式：
+* standlone: 默认模式。如果 OVS 交换机超过三次无法正常连接到 OpenFlow 控制器，OVS 交换机自己会负责建立流表。在这种模式下，OVS 和常见的 L2 交换机相似。与此同时，OVS 也会继续尝试连接控制器，一旦网络连接恢复，OVS 会再次切换到使用控制器进行流表管理。
+* secure: 在 secure 模式下，如果 OVS 无法正常连接到 OpenFlow 控制器，OVS 会不停的尝试与控制器重新建立连接，而不会自己负责建立流表。
+设置 OVS 的连接模式为 secure 模式```
+$ ovs-vsctl set Bridge ovs-switch fail-mode=secure
+```查看 OVS 的状态，“is\_connected:true”代表 OVS 已经成功连接到了 Floodlight```
+$ ovs-vsctl show
+30282710-d401-4187-8e13-52388f693df7
+Bridge ovs-switch
+Controller &amp;quot;tcp:9.181.137.182:6633&amp;quot;
+is\_connected: true
+Port ovs-switch
+Interface ovs-switch
+type: internal
+Port &amp;quot;p0&amp;quot;
+Interface &amp;quot;p0&amp;quot;
+type: internal
+Port &amp;quot;p1&amp;quot;
+tag: 101
+Interface &amp;quot;p1&amp;quot;
+type: internal
+Port &amp;quot;p2&amp;quot;
+Interface &amp;quot;p2&amp;quot;
+type: internal
+```通过访问 Floodlight 提供的 Web 管理界面 http://&amp;lt;Host Address&amp;gt;:8080/ui/index.html，我们可以查看 Floodlight 控制器的状态以及所有连接到 Floodlight 的交换机列表
+###### 图 2. Floodlight 主界面
+选中某个 OpenFlow 交换机， 查看其中的端口列表和流表信息
+###### 图 3. 查看 OpenFlow 交换机的详细信息
+通过 Floodlight 的 RESTAPI，添加两条新的规则让端口 p0 和 p1 可以相互通讯。注意：替换命令行中的 switch 的 ID 为交换机的 datapath ID```
+curl -d '{&amp;quot;switch&amp;quot;: &amp;quot;00:00:0e:f9:05:6b:7c:44&amp;quot;, &amp;quot;name&amp;quot;:&amp;quot;my-flow1&amp;quot;, &amp;quot;cookie&amp;quot;:&amp;quot;0&amp;quot;,&amp;quot;priority&amp;quot;:&amp;quot;32768&amp;quot;,
+&amp;quot;ingress-port&amp;quot;:&amp;quot;100&amp;quot;,&amp;quot;active&amp;quot;:&amp;quot;true&amp;quot;, &amp;quot;actions&amp;quot;:&amp;quot;output=flood&amp;quot;}'
+http://9.181.137.182:8080/wm/staticflowentrypusher/json
+curl -d '{&amp;quot;switch&amp;quot;: &amp;quot;00:00:0e:f9:05:6b:7c:44&amp;quot;, &amp;quot;name&amp;quot;:&amp;quot;my-flow2&amp;quot;, &amp;quot;cookie&amp;quot;:&amp;quot;0&amp;quot;,&amp;quot;priority&amp;quot;:&amp;quot;32768&amp;quot;,
+&amp;quot;ingress-port&amp;quot;:&amp;quot;101&amp;quot;,&amp;quot;active&amp;quot;:&amp;quot;true&amp;quot;, &amp;quot;actions&amp;quot;:&amp;quot;output=flood&amp;quot;}'
+http://9.181.137.182:8080/wm/staticflowentrypusher/json
+```验证是否能从端口 p0 发送数据包到 p1```
+$ ip netns exec ns0 ping -c4 192.168.1.101
+PING 192.168.1.101 (192.168.1.101) 56(84) bytes of data.
+64 bytes from 192.168.1.101: icmp\_req=1 ttl=64 time=0.027 ms
+64 bytes from 192.168.1.101: icmp\_req=2 ttl=64 time=0.018 ms
+64 bytes from 192.168.1.101: icmp\_req=3 ttl=64 time=0.023 ms
+64 bytes from 192.168.1.101: icmp\_req=4 ttl=64 time=0.022 ms
+--- 192.168.1.101 ping statistics ---
+4 packets transmitted, 4 received, 0% packet loss, time 2998ms
+rtt min/avg/max/mdev = 0.018/0.022/0.027/0.005 ms
+```在 OVS 端也可以看到，流表规则已经被 OVS 同步到本地。```
+$ ovs-ofctl dump-flows ovs-switch
+NXST\_FLOW reply (xid=0x4):
+cookie=0xa0000000000000, duration=335.122s, table=0, n\_packets=347, n\_bytes=28070,
+idle\_age=1, in\_port=100 actions=FLOOD
+cookie=0xa0000000000000, duration=239.892s, table=0, n\_packets=252, n\_bytes=24080,
+idle\_age=0, in\_port=101 actions=FLOOD
+```通过 Floodlight 的 RestAPI，查看交换机上的流表规则```
+curl http://9.181.137.182:8080/wm/staticflowentrypusher/list/00:00:0e:f9:05:6b:7c:44/json
+```通过 Floodlight 的 RestAPI，删除交换机上的流表规则```
+curl [http://9.181.137.182:8080/wm/staticflowentrypusher/clear/00:00:0e:f9:05:6b:7c:44/json](http://9.181.137.182:8080/wm/staticflowentrypusher/clear/00:00:0e:f9:05:6b:7c:44/json)
+&lt;/code>&lt;/pre>&lt;h4 id="总结">总结&lt;/h4>
+&lt;p>通过本文的讲述和实验，我们了解了 Open vSwitch 以及 OpenFlow 的基本概念，以及通过 OpenFlow 协议修改 Open vSwitch 中的流表项，最后演示了如何使用 Floodlight 连接 Open vSwitch 并进行管理。&lt;/p>
+- /posts/%e8%bd%ac%e5%9f%ba%e4%ba%8e-open-vswitch-%e7%9a%84-openflow-%e5%ae%9e%e8%b7%b5/ - This is a customized copyright.</description></item><item><title>Fedora23上无法运行vmware解决办法</title><link>/posts/fedora23_vmware_run_error/</link><pubDate>Sat, 30 Apr 2016 05:51:17 +0000</pubDate><guid>/posts/fedora23_vmware_run_error/</guid><description>seteuid0's blog /posts/fedora23_vmware_run_error/ -&lt;p>运行如下脚本：```
+#!/bin/bash
+cp -aiv /usr/lib64/libgio-2.0.so.0.4600.2 /usr/lib/vmware/lib/libgio-2.0.so.0/libgio-2.0.so.0&lt;/p>
+&lt;p>cp -aiv /usr/lib64/libglib-2.0.so.0.4600.2 /usr/lib/vmware/lib/libglib-2.0.so.0/libglib-2.0.so.0&lt;/p>
+&lt;p>cp -aiv /usr/lib64/libgmodule-2.0.so.0.4600.2 /usr/lib/vmware/lib/libgmodule-2.0.so.0/libgmodule-2.0.so.0&lt;/p>
+&lt;p>cp -aiv /usr/lib64/libgobject-2.0.so.0.4600.2 /usr/lib/vmware/lib/libgobject-2.0.so.0/libgobject-2.0.so.0&lt;/p>
+&lt;p>cp -aiv /usr/lib64/libgthread-2.0.so.0.4600.2 /usr/lib/vmware/lib/libgthread-2.0.so.0/libgthread-2.0.so.0&lt;/p>
+&lt;pre>&lt;code class="language- " data-lang=" ">&lt;/code>&lt;/pre>- /posts/fedora23_vmware_run_error/ - This is a customized copyright.</description></item><item><title>ubuntu 15.10上运行无法vmware解决办法</title><link>/posts/how-to-run-vmware-on-ubuntu15-10/</link><pubDate>Mon, 02 Nov 2015 13:37:37 +0000</pubDate><guid>/posts/how-to-run-vmware-on-ubuntu15-10/</guid><description>seteuid0's blog /posts/how-to-run-vmware-on-ubuntu15-10/ -&lt;p>今天把ubuntu系统升级到15.10，突然发现vmware虚拟机无法运行了，之前是11版本的，看之前一直提示12版本已经发布，就先把vmware升级了一下，结果还是没有办法运行（运行vmware没有显示）。 研究、搜索了半天，解决办法如下： 方法1：在终端执行如下动态库设置，然后再运行vmware或vmplayer&lt;code>export LD_LIBRARY_PATH=/usr/lib/vmware/lib/libglibmm-2.4.so.1/:$LD_LIBRARY_PATH&lt;/code>方法2：编辑/usr/bin/vmware，添加&lt;code>export LD\_LIBRARY\_PATH=/usr/lib/vmware/lib/libglibmm-2.4.so.1&lt;/code>再运行vmware，当然方法2一劳永逸^_^。 原来是vmware和vmplayer需要一些特殊的动态库，而这些动态库无疑和系统的动态库是冲突的，因此也只能是使用vmware的时候配置这些动态库，如果修改到环境变量里面，无疑会对其他的应用产生影响。 参考：```
+&lt;a href="https://communities.vmware.com/message/2547319">https://communities.vmware.com/message/2547319&lt;/a>
+&lt;a href="http://askubuntu.com/questions/689123/vmware-wont-work-after-ubuntu-upgrade">http://askubuntu.com/questions/689123/vmware-wont-work-after-ubuntu-upgrade&lt;/a>&lt;/p>
+&lt;pre>&lt;code>&lt;/code>&lt;/pre>- /posts/how-to-run-vmware-on-ubuntu15-10/ - This is a customized copyright.</description></item><item><title>Linux使用ＨＰ打印机配置方式总结</title><link>/posts/linux%e4%bd%bf%e7%94%a8%ef%bc%a8%ef%bc%b0%e6%89%93%e5%8d%b0%e6%9c%ba%e9%85%8d%e7%bd%ae%e6%96%b9%e5%bc%8f%e6%80%bb%e7%bb%93/</link><pubDate>Thu, 17 Sep 2015 10:02:01 +0000</pubDate><guid>/posts/linux%e4%bd%bf%e7%94%a8%ef%bc%a8%ef%bc%b0%e6%89%93%e5%8d%b0%e6%9c%ba%e9%85%8d%e7%bd%ae%e6%96%b9%e5%bc%8f%e6%80%bb%e7%bb%93/</guid><description>seteuid0's blog /posts/linux%e4%bd%bf%e7%94%a8%ef%bc%a8%ef%bc%b0%e6%89%93%e5%8d%b0%e6%9c%ba%e9%85%8d%e7%bd%ae%e6%96%b9%e5%bc%8f%e6%80%bb%e7%bb%93/ -&lt;p>Linux下处理打印机的服务是CUPS，但支持不通型号的打印机还是需要各个打印机相关的一些驱动做支撑。最近就使用ubuntu链接一台HP LaserJet Pro MFP M226dw，把中间碰到问题的解决办法记录如下： 连接打印机的方法有很多种，USB、网络、无线等，我使用的方法是网线，即笔记本和HP打印机都连接在一个交换机上面。 1、打印问题 使用cups添加设备的时候，cups可以自动找到打印机，但是连接的类型里面只有&amp;quot;AppSocket/HP JetDirect&amp;quot;等方式，没有办法看到HPLIP的连接类型。这个时候就需要安装HP相关的“驱动” 去网页：http://hplipopensource.com/hplip-web/install_wizard/index.html 依据自己的打印机型号寻找hplip文件，下载后进行安装。 安装以后使用cups就可以看到HPLIP的连接选项了，使用该连接选项连接打印机。打印测试页，一切正常，所以打印机已经工作正常。 2、扫描功能 有时难免会用到扫描功能，cups缺少相关的功能。 使用hp-toolbox命令就可以调出刚刚hplip包提供的工具集了，点击Actions-&amp;gt;Scan里面的就会出现扫描工具。 这时可能会提示需要安装二进制的插件。我用的是hplip-3.15.9，plugin安装貌似有问题，自动下载安装无法完成。搜寻半天，发现可以在https://www.openprinting.org/download/printdriver/auxfiles/HP/plugins/ 页面里找到对应的plugins，下载安装。scan功能一切正常。 搜索关键字：“ERROR:Plug-in file does not match its digital signature.”&lt;/p>
+- /posts/linux%e4%bd%bf%e7%94%a8%ef%bc%a8%ef%bc%b0%e6%89%93%e5%8d%b0%e6%9c%ba%e9%85%8d%e7%bd%ae%e6%96%b9%e5%bc%8f%e6%80%bb%e7%bb%93/ - This is a customized copyright.</description></item></channel></rss>

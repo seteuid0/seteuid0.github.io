@@ -1,3 +1,667 @@
 <rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>seteuid0's blog</title><link>/</link><description>Recent content on seteuid0's blog</description><generator>Hugo -- gohugo.io</generator><language>en-us</language><copyright>This is a customized copyright.</copyright><lastBuildDate>Sun, 18 Apr 2021 11:16:32 +0800</lastBuildDate><atom:link href="/index.xml" rel="self" type="application/rss+xml"/><item><title>First Post</title><link>/posts/first-post/</link><pubDate>Sun, 18 Apr 2021 11:16:32 +0800</pubDate><guid>/posts/first-post/</guid><description>seteuid0's blog /posts/first-post/ -&lt;h2 id="hello-world">hello world&lt;/h2>
-- /posts/first-post/ - This is a customized copyright.</description></item><item><title>[zz]RHEL 5/6 差异：时间处理机制</title><link>/posts/zz_rhel_56_difference_time_handling_mechanism/</link><pubDate>Mon, 29 Jul 2013 17:13:00 +0000</pubDate><guid>/posts/zz_rhel_56_difference_time_handling_mechanism/</guid><description>seteuid0's blog /posts/zz_rhel_56_difference_time_handling_mechanism/ -&lt;p>when you use different linux system,you will find the time&amp;rsquo;s different between the systems,here is the reason.RHEL 5/6 差异：时间处理机制06.29.2012, 系统服务 , by Roger.RHEL 5/6 差异：时间处理机制作者：Roger简介本文介绍了在 RHEL5 和 RHEL 6 两个版本系统中，对待时间的差异。目的在于帮助我们了解系统，应对OS升级的改动。概述RHEL 5/6 时间机制差异类别RHEL 5RHEL 6建议Anaconda 参数timezone &amp;ndash;utc修改/etc/sysconfig/clock修改/etc/adjtime对用户透明，不用调整开机初始化脚本，硬件时钟到系统时钟/etc/rc.d/rc.sysinit传参调用hwclock内核直接读取rtc_cmos获取时间/etc/sysconfig/clock需要区分关机脚本，系统时钟到硬件时钟/etc/rc.d/init.d/halt传参数调用hwclock/etc/rc.d/init.d/halt直接调用hwclock/etc/sysconfig/clock需要区分NTP软件包一个包：ntp-4.2.2p1-9.el5_3.2三个包：ntp-4.2.4p8-2.el6.centos.i686ntp-perl-4.2.4p8-2.el6.centos.i686ntpdate-4.2.4p8-2.el6.centos.i686RHEL 6 把 RHEL 5 一个包拆成了三个RHEL 6 建议三个包都安装ntpd启动脚本一个脚本：/etc/rc.d/init.d/ntpd两个脚本：/etc/rc.d/init.d/ntpd/etc/rc.d/init.d/ntpdateRHEL 6 中添加了ntpdate启动脚本，相当于额外多了一个服务，需要注意RHEL 5 与 RHEL 6 中，时间这块，外围软件包改动并不大，例如hwclock，NTP。改动比较大的是：Anaconda安装系统时，timezone &amp;ndash;utc的处理方式。开机读取硬件时钟的机制。关机写入硬件时钟的机制。linux 时间存储 原理分析首先需要了解的概念：硬件时钟系统时钟其次，BIOS里硬件时钟存的仅是一个UNIX时间戳。这个时间戳，有UTC时钟和LOCAL时钟两钟存法。UTC时间LOCAL时间（本地时间）注意点：我们所说的system clock use UTC (timezone &amp;ndash;utc) 实际上就是指BIOS里的时钟存法。与系统的“时区”没有关系。这点不要混淆。这里举一个你常见的例子：笔记本双系统，win+linux，如果linux使用了UTC时间，那么两个系统就会差8小时。原因：Unix规范里BIOS时钟存UTC时间戳，但windows改成了只支持存LOCAL时间戳（就是你墙上的时间），而linux两个格式都支持。这时，如果你linux使用了UTC时间，就会把BIOS的时间戳当作UTC时间，而你的windows把BIOS时间戳当作LOCAL时间。所以无论你怎么调，两个系统时间都不会一致。hwclock说到linux下的时钟，一定不能忽略hwclock，硬件时钟和系统时钟的互写就全靠它了。后续我们详解hwclock的工作机制。推荐看 man clock。开机对时钟的处理我们电脑关机状态时，硬件上的晶振会持续保存一个时间，这个时间就是硬件时钟。进入BIOS便可以看到。开机后，系统将硬件时钟读入系统，然后开始维持时间的增长。硬件时钟仅开机读取一次，由于进入了OS，我们有很多途径让时钟更准确，比如NTP等，这时的硬件时钟对我们是没有用的。关机对时钟的处理要关机了，系统会把时间写入硬件时钟，相当于更新硬件时钟。RHEL 5/6 都是/etc/rc.d/init.d/halt调用hwclock来写入硬件时钟，细节上略有不同，但都是做一样的事情。hwclockRHEL 5/6 中hwclock机制并没有变化：这里需要注意的是：hwclock维护一个文件，/etc/adjtime，用来确定硬件时钟是UTC还是LOCAL。hwclock原理分析：我们直接执行hwclock，就是读取硬件时钟。01[root@centos6 install]# strace -e trace=open hwclock02open(&amp;quot;/etc/ld.so.cache&amp;quot;, O_RDONLY)      = 303open(&amp;quot;/lib/libaudit.so.1&amp;quot;, O_RDONLY)    = 304open(&amp;quot;/lib/libc.so.6&amp;quot;, O_RDONLY)        = 305open(&amp;quot;/usr/lib/locale/locale-archive&amp;quot;, O_RDONLY|O_LARGEFILE) = 406open(&amp;quot;/usr/lib/locale/locale-archive&amp;quot;, O_RDONLY|O_LARGEFILE) = 407open(&amp;quot;/dev/rtc&amp;quot;, O_RDONLY|O_LARGEFILE)  = 408open(&amp;quot;/etc/adjtime&amp;quot;, O_RDONLY|O_LARGEFILE) = 509open(&amp;quot;/usr/share/zoneinfo/Universal&amp;quot;, O_RDONLY) = 510open(&amp;quot;/etc/localtime&amp;quot;, O_RDONLY)        = 511open(&amp;quot;/usr/share/locale/locale.alias&amp;quot;, O_RDONLY) = 512open(&amp;quot;/usr/share/locale/zh_CN.UTF-8/LC_MESSAGES/util-linux-ng.mo&amp;quot;, O_RDONLY) = -1 ENOENT (No such file or directory)13open(&amp;quot;/usr/share/locale/zh_CN.utf8/LC_MESSAGES/util-linux-ng.mo&amp;quot;, O_RDONLY) = -1 ENOENT (No such file or directory)14open(&amp;quot;/usr/share/locale/zh_CN/LC_MESSAGES/util-linux-ng.mo&amp;quot;, O_RDONLY) = 515open(&amp;quot;/usr/share/locale/zh.UTF-8/LC_MESSAGES/util-linux-ng.mo&amp;quot;, O_RDONLY) = -1 ENOENT (No such file or directory)16open(&amp;quot;/usr/share/locale/zh.utf8/LC_MESSAGES/util-linux-ng.mo&amp;quot;, O_RDONLY) = -1 ENOENT (No such file or directory)17open(&amp;quot;/usr/share/locale/zh/LC_MESSAGES/util-linux-ng.mo&amp;quot;, O_RDONLY) = -1 ENOENT (No such file or directory)18Wed 09 May 2012 05:56:55 PM CST  -0.430311 seconds1.hwclock首先打开了/dev/rtc,读取硬件时钟.2.打开/etc/adjtime文件,通过先前的记录来估算硬件时钟的偏差,并用来校正目前的时间.3.打开/etc/localtime时区文件,将硬件时间转换为当前时区对应的时间.我们执行hwclock -w &amp;ndash;debug，写入硬件时钟。同时打开debug模式，方便观察。01[root@centos6 install]# strace -e trace=open hwclock -w &amp;ndash;debug02open(&amp;quot;/etc/ld.so.cache&amp;quot;, O_RDONLY)      = 303open(&amp;quot;/lib/libaudit.so.1&amp;quot;, O_RDONLY)    = 304open(&amp;quot;/lib/libc.so.6&amp;quot;, O_RDONLY)        = 305open(&amp;quot;/usr/lib/locale/locale-archive&amp;quot;, O_RDONLY|O_LARGEFILE) = 406open(&amp;quot;/usr/lib/locale/locale-archive&amp;quot;, O_RDONLY|O_LARGEFILE) = 407open(&amp;quot;/usr/share/locale/locale.alias&amp;quot;, O_RDONLY) = 408open(&amp;quot;/usr/share/locale/zh_CN.UTF-8/LC_MESSAGES/util-linux-ng.mo&amp;quot;, O_RDONLY) = -1 ENOENT (No such file or directory)09open(&amp;quot;/usr/share/locale/zh_CN.utf8/LC_MESSAGES/util-linux-ng.mo&amp;quot;, O_RDONLY) = -1 ENOENT (No such file or directory)10open(&amp;quot;/usr/share/locale/zh_CN/LC_MESSAGES/util-linux-ng.mo&amp;quot;, O_RDONLY) = 411open(&amp;quot;/usr/share/locale/zh.UTF-8/LC_MESSAGES/util-linux-ng.mo&amp;quot;, O_RDONLY) = -1 ENOENT (No such file or directory)12open(&amp;quot;/usr/share/locale/zh.utf8/LC_MESSAGES/util-linux-ng.mo&amp;quot;, O_RDONLY) = -1 ENOENT (No such file or directory)13open(&amp;quot;/usr/share/locale/zh/LC_MESSAGES/util-linux-ng.mo&amp;quot;, O_RDONLY) = -1 ENOENT (No such file or directory)14hwclock from util-linux-ng 2.17.215open(&amp;quot;/dev/rtc&amp;quot;, O_RDONLY|O_LARGEFILE)  = 416Using /dev interface to clock.17open(&amp;quot;/etc/adjtime&amp;quot;, O_RDONLY|O_LARGEFILE) = 518Last drift adjustment done at 1336557886 seconds after 196919Last calibration done at 1336557886 seconds after 196920Hardware clock is on UTC time21Assuming hardware clock is kept in UTC time.22Waiting for clock tick&amp;hellip;23&amp;hellip;got clock tick24Time read from Hardware Clock: 2012/05/09 10:38:0725open(&amp;quot;/usr/share/zoneinfo/Universal&amp;quot;, O_RDONLY) = 526Hw clock time : 2012/05/09 10:38:07 = 1336559887 seconds since 196927open(&amp;quot;/etc/localtime&amp;quot;, O_RDONLY)        = 528Time elapsed since reference time has been 0.505254 seconds.29Delaying further to reach the new time.30Setting Hardware Clock to 10:38:08 = 1336559888 seconds since 196931ioctl(RTC_SET_TIME) was successful.32Not adjusting drift factor because it has been less than a day since the last calibration.33open(&amp;quot;/etc/adjtime&amp;quot;, O_WRONLY|O_CREAT|O_TRUNC|O_LARGEFILE, 0666) = 51.打开/dev/rtc，读取硬件时钟。2.打开/etc/adjtime文件,通过先前的记录来估算硬件时钟的偏差,并用来校正目前的时间.3.打开/etc/localtime时区文件,将硬件时间转换为当前时区对应的时间.4.ioctl写入硬件时钟5.更新/etc/adjtime文件里的时间戳/etc/adjtime由hwclock维护，默认不需要我们修改。如果修改，也仅是 RHEL 6 上修改第三行。UTC / LOCAL 。1[root@centos6 install]# cat /etc/adjtime2-0.436938 1336541643 0.000000313365416434UTC不同之处的注意点在 RHEL 5 中，开机会读取/etc/sysconfig/clock，传参数给 hwclock，因此/etc/adjtime文件失效，会以/etc/sysconfig/clock为准。关机也同样是这个原理。在 RHEL 6 中，不再有/etc/sysconfig/clock的参与，hwclock直接读取/etc/adjtime处理时间格式。Anaconda我们安装系统时，一般设置为：timezone Asia/Shanghai。也就是不使用UTC时间。RHEL 5 中，Anaconda会修改/etc/sysconfig/clock文件。1[hongmeng@login1.cm4 ~]$ cat /etc/sysconfig/clock2ZONE=&amp;ldquo;Asia/Shanghai&amp;quot;3UTC=false4ARC=falseRHEL 6 中，Anaconda会直接修改/etc/adjtime文件。/etc/sysconfig/clock里UTC，ARC等配置无意义。因为/etc/rc.d/rc.sysinit和/etc/rc.d/init.d/halt已经不再读取/etc/sysconfig/clock。1[root@opsinfo1 ~]# cat /etc/sysconfig/clock2ZONE=&amp;ldquo;Asia/Shanghai&amp;quot;1[root@opsinfo1 ~]# cat /etc/adjtime2-0.004473 1336506385 0.000000313365063854LOCAL相关源码：RHEL 5 Anaconda：1usr/lib/anaconda/timezone.py2 3        f = open(instPath + &amp;ldquo;/etc/sysconfig/clock&amp;rdquo;, &amp;ldquo;w&amp;rdquo;)4 5        f.write(&amp;lsquo;ZONE=&amp;quot;%s&amp;quot;n&amp;rsquo; % self.tz)6        f.write(&amp;ldquo;UTC=%sn&amp;rdquo; % bool(self.utc))7        f.write(&amp;ldquo;ARC=%sn&amp;rdquo; % bool(self.arc))8 9        f.close()RHEL 6 Anaconda：01usr/lib/anaconda/timezone.py02 03        f = open(instPath + &amp;ldquo;/etc/adjtime&amp;rdquo;, &amp;ldquo;w&amp;rdquo;)04        f.write(lines[0])05        f.write(lines[1])06        if self.utc:07            f.write(&amp;ldquo;UTCn&amp;rdquo;)08        else:09            f.write(&amp;ldquo;LOCALn&amp;rdquo;)10        f.close()/etc/rc.d/rc.sysinitRHEL 5 中，开机启动脚本会读取/etc/sysconfig/clock，再传参调用hwclock。将硬件时钟写入系统时钟。01# Set the system clock.02update_boot_stage RCclock03ARC=004SRM=005UTC=006 07if [ -f /etc/sysconfig/clock ]; then08   . /etc/sysconfig/clock09 10   # convert old style clock config to new values11   if [ &amp;ldquo;${CLOCKMODE}&amp;rdquo; = &amp;ldquo;GMT&amp;rdquo; ]; then12      UTC=true13   elif [ &amp;ldquo;${CLOCKMODE}&amp;rdquo; = &amp;ldquo;ARC&amp;rdquo; ]; then14      ARC=true15   fi16fi17 18CLOCKDEF=&amp;ldquo;&amp;ldquo;19CLOCKFLAGS=&amp;quot;$CLOCKFLAGS &amp;ndash;hctosys&amp;quot;20 21case &amp;ldquo;$UTC&amp;rdquo; in22    yes|true)   CLOCKFLAGS=&amp;quot;$CLOCKFLAGS &amp;ndash;utc&amp;quot;23                CLOCKDEF=&amp;quot;$CLOCKDEF (utc)&amp;rdquo; ;;24    no|false)   CLOCKFLAGS=&amp;quot;$CLOCKFLAGS &amp;ndash;localtime&amp;quot;25                CLOCKDEF=&amp;quot;$CLOCKDEF (localtime)&amp;rdquo; ;;26esac27case &amp;ldquo;$ARC&amp;rdquo; in28    yes|true)   CLOCKFLAGS=&amp;quot;$CLOCKFLAGS &amp;ndash;arc&amp;quot;29                CLOCKDEF=&amp;quot;$CLOCKDEF (arc)&amp;rdquo; ;;30esac31case &amp;ldquo;$SRM&amp;rdquo; in32    yes|true)   CLOCKFLAGS=&amp;quot;$CLOCKFLAGS &amp;ndash;srm&amp;quot;33                CLOCKDEF=&amp;quot;$CLOCKDEF (srm)&amp;rdquo; ;;34esac35 36[ -x /sbin/hwclock ] &amp;amp;&amp;amp; /sbin/hwclock $CLOCKFLAGS37 38action $&amp;ldquo;Setting clock $CLOCKDEF: `date`&amp;rdquo; /bin/trueRHEL 6 中，开机启动脚本不再调用hwclock。/etc/rc.d/init.d/haltRHEL 5 中，关机脚本会读取/etc/sysconfig/clock，再传参调用hwclock。将系统时钟写入硬件时钟。01# Sync the system clock.02ARC=003SRM=004UTC=005 06if [ -f /etc/sysconfig/clock ]; then07   . /etc/sysconfig/clock08 09   # convert old style clock config to new values10   if [ &amp;ldquo;${CLOCKMODE}&amp;rdquo; = &amp;ldquo;GMT&amp;rdquo; ]; then11      UTC=true12   elif [ &amp;ldquo;${CLOCKMODE}&amp;rdquo; = &amp;ldquo;ARC&amp;rdquo; ]; then13      ARC=true14   fi15fi16 17CLOCKDEF=&amp;ldquo;&amp;ldquo;18CLOCKFLAGS=&amp;quot;$CLOCKFLAGS &amp;ndash;systohc&amp;quot;19 20case &amp;ldquo;$UTC&amp;rdquo; in21   yes|true)22    CLOCKFLAGS=&amp;quot;$CLOCKFLAGS -u&amp;rdquo;;23    CLOCKDEF=&amp;quot;$CLOCKDEF (utc)&amp;quot;;24    ;;25   no|false)26    CLOCKFLAGS=&amp;quot;$CLOCKFLAGS &amp;ndash;localtime&amp;rdquo;;27    CLOCKDEF=&amp;quot;$CLOCKDEF (localtime)&amp;quot;;28    ;;29esac30 31case &amp;ldquo;$ARC&amp;rdquo; in32   yes|true)33    CLOCKFLAGS=&amp;quot;$CLOCKFLAGS -A&amp;quot;;34    CLOCKDEF=&amp;quot;$CLOCKDEF (arc)&amp;quot;;35    ;;36esac37case &amp;ldquo;$SRM&amp;rdquo; in38   yes|true)39    CLOCKFLAGS=&amp;quot;$CLOCKFLAGS -S&amp;quot;;40    CLOCKDEF=&amp;quot;$CLOCKDEF (srm)&amp;quot;;41    ;;42esac43 44[ -x /sbin/hwclock ] &amp;amp;&amp;amp; action $&amp;ldquo;Syncing hardware clock to system time&amp;rdquo; /sbin/hwclock $CLOCKFLAGSRHEL 6 中，关机脚本不读取/etc/sysconfig/clock，直接调用hwclock。将系统时钟写入硬件时钟。1# Save random seed2touch /var/lib/random-seed3chmod 600 /var/lib/random-seed4action $&amp;ldquo;Saving random seed: &amp;quot; dd if=/dev/urandom of=/var/lib/random-seed count=1 bs=512 2&amp;gt;/dev/null5 6[ -x /sbin/hwclock -a -e /dev/rtc ] &amp;amp;&amp;amp; action $&amp;ldquo;Syncing hardware clock to system time&amp;rdquo; /sbin/hwclock &amp;ndash;systohc/etc/sysconfig/clockRHEL 5:1ZONE=&amp;ldquo;Asia/Shanghai&amp;quot;2UTC=false3ARC=falseRHEL 6:1ZONE=&amp;ldquo;Asia/Shanghai&amp;quot;NTP软件包RHEL 5 中，NTP 只有一个软件包。1ntp-4.2.2p1-9.el5_3.2RHEL 6 中，NTP 有三个软件包。1ntp-4.2.4p8-2.el6.centos.i6862ntp-perl-4.2.4p8-2.el6.centos.i6863ntpdate-4.2.4p8-2.el6.centos.i686内容其实是一样的，RHEL 6 里只是拆分了，这块可以看NTP相关的文档。ntpd启动脚本RHEL 5:/etc/rc.d/init.d/ntpdRHEL 6:/etc/rc.d/init.d/ntpd/etc/rc.d/init.d/ntpdate影响与应对配置文件/etc/sysconfig/clock需要区分，否则 RHEL 6 写了也不生效。RHEL 5:1ZONE=&amp;ldquo;Asia/Shanghai&amp;quot;2UTC=false3ARC=falseRHEL 6:1ZONE=&amp;ldquo;Asia/Shanghai&amp;quot;另外，RHEL 6里，三个包都建议装上。&lt;/p>
-- /posts/zz_rhel_56_difference_time_handling_mechanism/ - This is a customized copyright.</description></item></channel></rss>
+- /posts/first-post/ - This is a customized copyright.</description></item><item><title>Run macOS on QEMU/KVM</title><link>/posts/run-macos-on-qemu-kvm/</link><pubDate>Wed, 18 Dec 2019 13:17:15 +0000</pubDate><guid>/posts/run-macos-on-qemu-kvm/</guid><description>seteuid0's blog /posts/run-macos-on-qemu-kvm/ -&lt;p>有需要跑macOS，遂找资料进行下初期的技术验证。看了一些网页后大多都基于https://github.com/kholia/OSX-KVM 来做，简单验证流程如下： 使用fedora30系统（系统运行qemu的操作省略）```
+git clone &lt;a href="https://github.com/kholia/OSX-KVM.git">https://github.com/kholia/OSX-KVM.git&lt;/a>
+cd OSX-KVM
+./fetch-macOS.py&lt;/p>
+&lt;h1 id="productid-version-build-post-date-title">ProductID Version Build Post Date Title&lt;/h1>
+&lt;p>1 041-91758 10.13.6 17G66 2019-10-19 macOS High Sierra
+2 041-88800 10.14.4 18E2034 2019-10-23 macOS Mojave
+3 061-26589 10.14.6 18G103 2019-10-14 macOS Mojave
+4 061-10700 10.15.2 19C57 2019-12-10 macOS Catalina
+5 041-90855 10.13.5 17F66a 2019-10-23 Install macOS High Sierra Beta
+6 061-26578 10.14.5 18F2059 2019-10-14 macOS Mojave
+7 061-44345 10.15.2 19C39d 2019-11-15 macOS Catalina Beta
+Choose a product to download (1-7): 2&lt;/p>
+&lt;p>qemu-img convert BaseSystem.dmg -O raw BaseSystem.img&lt;/p>
+&lt;p>qemu-img create -f qcow2 mac_hdd_ng.img 128G
+mv mac_hdd_ng.img mac_hdd.img
+&lt;code>然后基于boot-macOS-Catalina进行修改，我修改后的内容如下，安装后即可进入系统，参数添加了spice可以通过spice进行访问。&lt;/code>
+############################################################################&lt;/p>
+&lt;h1 id="note-tweak-the-my_options-line-in-case-you-are-having-booting-problems">NOTE: Tweak the &amp;ldquo;MY_OPTIONS&amp;rdquo; line in case you are having booting problems!&lt;/h1>
+&lt;p>############################################################################&lt;/p>
+&lt;h1 id="this-works-for-catalina-as-well-as-mojave-tested-with-macos-10146-and-macos-1015">This works for Catalina as well as Mojave. Tested with macOS 10.14.6 and macOS 10.15.&lt;/h1>
+&lt;p>MY_OPTIONS=&amp;quot;+pcid,+ssse3,+sse4.2,+popcnt,+avx,+aes,+xsave,+xsaveopt,check&amp;quot;&lt;/p>
+&lt;h1 id="ovmffirmware">OVMF=./firmware&lt;/h1>
+&lt;p>OVMF=&amp;quot;./&amp;quot;&lt;/p>
+&lt;p>qemu-system-x86_64 -enable-kvm -m 3072 -cpu Penryn,kvm=on,vendor=GenuineIntel,+invtsc,vmware-cpuid-freq=on,$MY_OPTIONS\&lt;br>
+-machine q35 \&lt;br>
+-smp 4,cores=2 \&lt;br>
+-usb -device usb-kbd -device usb-mouse \&lt;br>
+-device isa-applesmc,osk=&amp;ldquo;ourhardworkbythesewordsguardedpleasedontsteal(c)AppleComputerInc&amp;rdquo; \&lt;br>
+-drive if=pflash,format=raw,readonly,file=$OVMF/OVMF_CODE.fd \&lt;br>
+-drive if=pflash,format=raw,file=$OVMF/OVMF_VARS-1024x768.fd \&lt;br>
+-smbios type=2 \&lt;br>
+-device ich9-intel-hda -device hda-duplex \&lt;br>
+-device ich9-ahci,id=sata \&lt;br>
+-drive id=Clover,if=none,snapshot=on,format=qcow2,file=./&amp;lsquo;Catalina/CloverNG.qcow2&amp;rsquo; \&lt;br>
+-device ide-hd,bus=sata.2,drive=Clover \&lt;br>
+-device ide-hd,bus=sata.3,drive=InstallMedia \&lt;br>
+-drive id=InstallMedia,if=none,file=BaseSystem.img,format=raw \&lt;br>
+-drive id=MacHDD,if=none,file=./mac_hdd_ng.img,format=qcow2 \&lt;br>
+-device ide-hd,bus=sata.4,drive=MacHDD \&lt;br>
+-netdev tap,id=net0,ifname=tap0,script=no,downscript=no -device vmxnet3,netdev=net0,id=net0,mac=52:54:00:c9:18:27 \&lt;br>
+-monitor stdio \&lt;br>
+-vnc 0.0.0.0:0 -k en-us \&lt;br>
+-spice port=7900,addr=0.0.0.0,disable-ticketing,image-compression=off,seamless-migration=on \&lt;br>
+-vga vmware&lt;/p>
+&lt;pre>&lt;code>&lt;/code>&lt;/pre>- /posts/run-macos-on-qemu-kvm/ - This is a customized copyright.</description></item><item><title>Rockchip linux sdk buildroot使用记录</title><link>/posts/rockchip-linux-sdk-buildroot%e4%bd%bf%e7%94%a8%e8%ae%b0%e5%bd%95/</link><pubDate>Sat, 02 Nov 2019 08:55:07 +0000</pubDate><guid>/posts/rockchip-linux-sdk-buildroot%e4%bd%bf%e7%94%a8%e8%ae%b0%e5%bd%95/</guid><description>seteuid0's blog /posts/rockchip-linux-sdk-buildroot%e4%bd%bf%e7%94%a8%e8%ae%b0%e5%bd%95/ -&lt;p>Rockchip Linux SDK里面的buildroot可以制作一个简洁的rootfs，但按照文档还是有一些问题，以下是使用时大致的一个记录及代码修改记录。 SDK从 &lt;a href="http://opensource.rock-chips.com/wiki">http://opensource.rock-chips.com/wiki&lt;/a>_Linux_SDK 获取。http://opensource.rock-chips.com/wiki_Source 里面有使用方法。 先要获取repo&lt;code>git clone https://github.com/rockchip-linux/repo mkdir linux cd linux&lt;/code>而后同步代码，我这里使用的是RK3399的代码，由于网络原因可能会有超时发生，可以使用后面的脚本进行多次获取。```
+../repo/repo init &amp;ndash;repo-url=https://github.com/rockchip-linux/repo -u &lt;a href="https://github.com/rockchip-linux/manifests">https://github.com/rockchip-linux/manifests&lt;/a> -b master -m rk3399_linux_release.xml
+../repo/repo sync&lt;/p>
+&lt;pre>&lt;code>#!/bin/sh
+../repo/repo sync -c
+while \[ $? -ne 0 \] ;
+do
+../repo/repo sync -c;
+done
+```代码就绪后就可以开始动手编译了。```
+#cd u-boot
+#./make.sh evb-rk3399
+$ source buildroot/build/envsetup.sh
+You're building on Linux
+Lunch menu...pick a combo:
+1. rockchip\_rk3308\_release
+2. rockchip\_rk3308\_debug
+3. rockchip\_rk3308\_robot\_release
+4. rockchip\_rk3308\_robot\_debug
+5. rockchip\_rk3308\_mini\_release
+Which would you like? \[1\] #这里选择硬件对应的配置
+$make
+$./build.sh rootfs
+$ls rockchip/3399/linux/buildroot/output/rockchip\_rk3399/images/rootfs.ext4
+```在编译的过程中由于语法问题有多处错误，大致需要修改以下内容(有些内容遗漏了）```
+./buildroot/output/rockchip\_rk3399/build/host-squashfs-3de1687d7432ea9b302c2db9521996f506c140a3/squashfs-tools/mksquashfs.c
+添加#include &amp;lt;sys/sysmacros.h&amp;gt;
+./output/rockchip\_rk3399/build/host-squashfs-3de1687d7432ea9b302c2db9521996f506c140a3/squashfs-tools/Makefile
+LIBS = -lpthread -lm -lc
+./rockchip\_rk3399/build/settings-1.0/wlan/wlanlisttable.cpp ifiStateItem::operator &amp;lt; 函数做下面的修改
+} else if (state == WIFI\_STATE\_SAVED || this-&amp;gt;text().toInt() == WIFI\_STATE\_AUTH\_FAILED) {
+./rockchip\_rk3399/build/QLauncher-1.0/src/appi18n.cpp 文件 字符串处修改成如下内容
+QString lang= (tmp-&amp;gt;value(&amp;quot;LANG&amp;quot;,defaultLang).toString().leftRef(langTokenLength)).toString()+QString(QLatin1String(&amp;quot;/appName&amp;quot;));
+./output/rockchip\_rk3399/build/host-libglib2-2.54.2/gio/Makefile
+```END&lt;/code>&lt;/pre>- /posts/rockchip-linux-sdk-buildroot%e4%bd%bf%e7%94%a8%e8%ae%b0%e5%bd%95/ - This is a customized copyright.</description></item><item><title>[ZZ]v4l2的学习建议和流程解析</title><link>/posts/zzv4l2%e7%9a%84%e5%ad%a6%e4%b9%a0%e5%bb%ba%e8%ae%ae%e5%92%8c%e6%b5%81%e7%a8%8b%e8%a7%a3%e6%9e%90/</link><pubDate>Tue, 20 Aug 2019 13:28:31 +0000</pubDate><guid>/posts/zzv4l2%e7%9a%84%e5%ad%a6%e4%b9%a0%e5%bb%ba%e8%ae%ae%e5%92%8c%e6%b5%81%e7%a8%8b%e8%a7%a3%e6%9e%90/</guid><description>seteuid0's blog /posts/zzv4l2%e7%9a%84%e5%ad%a6%e4%b9%a0%e5%bb%ba%e8%ae%ae%e5%92%8c%e6%b5%81%e7%a8%8b%e8%a7%a3%e6%9e%90/ -&lt;p>最近设计摄像头相关工作，之前虽然断断续续对V4L有些了解但不系统，在网上搜索了下发现V4L2应用还是非常广泛，所以资料也非常多，转载一片整理的比较全面的，就不重复造轮子了。 原文地址：https://www.cnblogs.com/silence-hust/p/4464291.html v4l2，一开始听到这个名词的时候，以为又是一个很难很难的模块，涉及到视频的处理，后来在网上各种找资料后，才发现其实v4l2已经分装好了驱动程序，只要我们根据需要调用相应的接口和函数，从而实现视频的获取和处理。只要认真的看几篇文章就对v4l2有一定的了解了，由于是第一次接触，网上的资料良莠不齐，难得可以找到几篇自己感觉很不错的。记录下来：（没必要看太多，很多都是一样的意思） &lt;a href="http://www.embedu.org/Column/Column320.htm">http://www.embedu.org/Column/Column320.htm&lt;/a>   &lt;strong>这篇是不错的介绍，很讨厌有弹窗&lt;/strong> &lt;a href="http://www.cnblogs.com/emouse/archive/2013/03/04/2943243.html">http://www.cnblogs.com/emouse/archive/2013/03/04/2943243.html&lt;/a>  &lt;strong>这个可以作为第一篇来看，博主整理的不错&lt;/strong> &lt;a href="http://blog.chinaunix.net/uid-11765716-id-2855735.html">http://blog.chinaunix.net/uid-11765716-id-2855735.html&lt;/a>    &lt;strong>这篇也比较详细&lt;/strong> &lt;a href="http://blog.csdn.net/ddddwant/article/details/8475211">http://blog.csdn.net/ddddwant/article/details/8475211&lt;/a>   &lt;strong>这篇提到的问题和我遇到的一样，花屏了，内存没有读取好&lt;/strong> &lt;a href="http://my.oschina.net/u/1024767/blog/210801#OSC_h2_14">http://my.oschina.net/u/1024767/blog/210801#OSC_h2_14&lt;/a>    &lt;strong>对capture.c文件的解读&lt;/strong> &lt;a href="http://blog.csdn.net/g_salamander/article/details/8107692">http://blog.csdn.net/g_salamander/article/details/8107692&lt;/a>    &lt;strong>对各个结构体有比较好的说明&lt;/strong>  &lt;/p>
+&lt;h2 id="一video-for-linux-two">&lt;strong>一、Video for Linux two&lt;/strong>&lt;/h2>
+&lt;p>v4l2为linux下视频设备程序提供了一套接口规范。包括一套数据结构和底层V4L2驱动接口。只能在linux下使用。它使程序有发现设备和操作设备的能力。它主要是用一系列的回调函数来实现这些功能。像设置摄像头的频率、帧频、视频压缩格式和图像参数等等。当然也可以用于其他多媒体的开发，如音频等。 在Linux下，所有外设都被看成一种特殊的文件，成为“设备文件”，可以象访问普通文件一样对其进行读写。一般来说，采用V4L2驱动的摄像头设备文是/dev/v4l/video0。为了通用，可以建立一个到/dev/video0的链接。V4L2支持两种方式来采集图像：内存映射方式(mmap)和直接读取方式(read)。V4L2在include/linux/videodev.h文件中定义了一些重要的数据结构，在采集图像的过程中，就是通过对这些数据的操作来获得最终的图像数据。Linux系统V4L2的能力可在Linux内核编译阶段配置，默认情况下都有此开发接口。V4L2从Linux 2.5.x版本的内核中开始出现。&lt;/p>
+&lt;p>　　V4L2规范中不仅定义了通用API元素(Common API Elements)，图像的格式(Image Formats)，输入/输出方法(Input/Output)，还定义了Linux内核驱动处理视频信息的一系列接口(Interfaces)，这些接口主要有：&lt;/p>
+&lt;p>　　视频采集接口——Video Capture Interface; 视频输出接口—— Video Output Interface; 视频覆盖/预览接口——Video Overlay Interface; 视频输出覆盖接口——Video Output Overlay Interface; 编解码接口——Codec Interface。&lt;/p>
+&lt;h2 id="二v4l2结构体介绍">二、v4l2结构体介绍&lt;/h2>
+&lt;p>1、常用的结构体在内核目录include/linux/videodev2.h中定义&lt;/p>
+&lt;p>        struct v4l2_requestbuffers        //申请帧缓冲，对应命令VIDIOC_REQBUFS struct v4l2_capability        //视频设备的功能，对应命令VIDIOC_QUERYCAP struct v4l2_input        //视频输入信息，对应命令VIDIOC_ENUMINPUT struct v4l2_standard        //视频的制式，比如PAL，NTSC，对应命令VIDIOC_ENUMSTD struct v4l2_format        //帧的格式，对应命令VIDIOC_G_FMT、VIDIOC_S_FMT等 struct v4l2_buffer        //驱动中的一帧图像缓存，对应命令VIDIOC_QUERYBUF struct v4l2_crop        //视频信号矩形边框 v4l2_std_id        //视频制式&lt;/p>
+&lt;p>常用结构体的内容：&lt;/p>
+&lt;p>1&lt;/p>
+&lt;p>2&lt;/p>
+&lt;p>3&lt;/p>
+&lt;p>4&lt;/p>
+&lt;p>5&lt;/p>
+&lt;p>6&lt;/p>
+&lt;p>7&lt;/p>
+&lt;p>8&lt;/p>
+&lt;p>9&lt;/p>
+&lt;p>10&lt;/p>
+&lt;p>11&lt;/p>
+&lt;p>12&lt;/p>
+&lt;p>13&lt;/p>
+&lt;p>14&lt;/p>
+&lt;p>15&lt;/p>
+&lt;p>16&lt;/p>
+&lt;p>17&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_capability&lt;/code>&lt;/p>
+&lt;p>&lt;code>{&lt;/code>&lt;/p>
+&lt;p>&lt;code>u8 driver[16]; ``// 驱动名字&lt;/code>&lt;/p>
+&lt;p>&lt;code>u8 card[32]; ``// 设备名字&lt;/code>&lt;/p>
+&lt;p>&lt;code>u8 bus_info[32]; ``// 设备在系统中的位置&lt;/code>&lt;/p>
+&lt;p>&lt;code>u32 version; ``// 驱动版本号&lt;/code>&lt;/p>
+&lt;p>&lt;code>u32 capabilities; ``// 设备支持的操作&lt;/code>&lt;/p>
+&lt;p>&lt;code>u32 reserved[4]; ``// 保留字段&lt;/code>&lt;/p>
+&lt;p>&lt;code>};&lt;/code>&lt;/p>
+&lt;p>其中域 capabilities 代表设备支持的操作模式，常见的值有 V4L2_CAP_VIDEO_CAPTURE | V4L2_CAP_STREAMING 表示是一个视频捕捉设备并且具有数据流控制模式；另外 driver 域需要和 struct video_device 中的 name 匹配。&lt;/p>
+&lt;p>1&lt;/p>
+&lt;p>2&lt;/p>
+&lt;p>3&lt;/p>
+&lt;p>4&lt;/p>
+&lt;p>5&lt;/p>
+&lt;p>6&lt;/p>
+&lt;p>7&lt;/p>
+&lt;p>8&lt;/p>
+&lt;p>9&lt;/p>
+&lt;p>10&lt;/p>
+&lt;p>11&lt;/p>
+&lt;p>12&lt;/p>
+&lt;p>13&lt;/p>
+&lt;p>14&lt;/p>
+&lt;p>15&lt;/p>
+&lt;p>16&lt;/p>
+&lt;p>17&lt;/p>
+&lt;p>18&lt;/p>
+&lt;p>19&lt;/p>
+&lt;p>20&lt;/p>
+&lt;p>21&lt;/p>
+&lt;p>22&lt;/p>
+&lt;p>23&lt;/p>
+&lt;p>24&lt;/p>
+&lt;p>25&lt;/p>
+&lt;p>26&lt;/p>
+&lt;p>27&lt;/p>
+&lt;p>28&lt;/p>
+&lt;p>29&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_format { &lt;/code>&lt;/p>
+&lt;p>&lt;code>enum&lt;/code> &lt;code>v4l2_buf_type type; &lt;/code>&lt;/p>
+&lt;p>&lt;code>union&lt;/code> &lt;code>{ &lt;/code>&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_pix_format         pix;     ``/* V4L2_BUF_TYPE_VIDEO_CAPTURE */&lt;/code>&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_window             win;     ``/* V4L2_BUF_TYPE_VIDEO_OVERLAY */&lt;/code>&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_vbi_format         vbi;     ``/* V4L2_BUF_TYPE_VBI_CAPTURE */&lt;/code>&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_sliced_vbi_format  sliced;  ``/* V4L2_BUF_TYPE_SLICED_VBI_CAPTURE */&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u8   raw_data[200];                   ``/* user-defined */&lt;/code>&lt;/p>
+&lt;p>&lt;code>} fmt; &lt;/code>&lt;/p>
+&lt;p>&lt;code>}; &lt;/code>&lt;/p>
+&lt;p>&lt;code>enum&lt;/code> &lt;code>v4l2_buf_type { &lt;/code>&lt;/p>
+&lt;p>&lt;code>V4L2_BUF_TYPE_VIDEO_CAPTURE        = 1, &lt;/code>&lt;/p>
+&lt;p>&lt;code>V4L2_BUF_TYPE_VIDEO_OUTPUT         = 2, &lt;/code>&lt;/p>
+&lt;p>&lt;code>V4L2_BUF_TYPE_VIDEO_OVERLAY        = 3, &lt;/code>&lt;/p>
+&lt;p>&lt;code>... &lt;/code>&lt;/p>
+&lt;p>&lt;code>V4L2_BUF_TYPE_PRIVATE              = 0x80, &lt;/code>&lt;/p>
+&lt;p>&lt;code>}; &lt;/code>&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_pix_format { &lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32                   width; &lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32                   height; &lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32                   pixelformat; &lt;/code>&lt;/p>
+&lt;p>&lt;code>enum&lt;/code> &lt;code>v4l2_field         field; &lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32                   bytesperline;   ``/* for padding, zero if unused */&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32                   sizeimage; &lt;/code>&lt;/p>
+&lt;p>&lt;code>enum&lt;/code> &lt;code>v4l2_colorspace    colorspace; &lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32                   priv;           ``/* private data, depends on pixelformat */&lt;/code>&lt;/p>
+&lt;p>&lt;code>};&lt;/code>&lt;/p>
+&lt;p>常见的捕获模式为 V4L2_BUF_TYPE_VIDEO_CAPTURE 即视频捕捉模式，在此模式下 fmt 联合体采用域 v4l2_pix_format：其中 width 为视频的宽、height 为视频的高、pixelformat 为视频数据格式（常见的值有 V4L2_PIX_FMT_YUV422P | V4L2_PIX_FMT_RGB565）、bytesperline 为一行图像占用的字节数、sizeimage 则为图像占用的总字节数、colorspace 指定设备的颜色空间。   struct v4l2_requestbuffers 与 VIDIOC_REQBUFS ，VIDIOC_REQBUFS 命令通过结构 v4l2_requestbuffers 请求驱动申请一片连续的内存用于缓存视频信息：&lt;/p>
+&lt;p>1&lt;/p>
+&lt;p>2&lt;/p>
+&lt;p>3&lt;/p>
+&lt;p>4&lt;/p>
+&lt;p>5&lt;/p>
+&lt;p>6&lt;/p>
+&lt;p>7&lt;/p>
+&lt;p>8&lt;/p>
+&lt;p>9&lt;/p>
+&lt;p>10&lt;/p>
+&lt;p>11&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_requestbuffers {&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32                   count;&lt;/code>&lt;/p>
+&lt;p>&lt;code>enum&lt;/code> &lt;code>v4l2_buf_type      type;&lt;/code>&lt;/p>
+&lt;p>&lt;code>enum&lt;/code> &lt;code>v4l2_memory        memory;&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32                   reserved[2];&lt;/code>&lt;/p>
+&lt;p>&lt;code>};&lt;/code>&lt;/p>
+&lt;p>&lt;code>enum&lt;/code> &lt;code>v4l2_memory {&lt;/code>&lt;/p>
+&lt;p>&lt;code>V4L2_MEMORY_MMAP             = 1,&lt;/code>&lt;/p>
+&lt;p>&lt;code>V4L2_MEMORY_USERPTR          = 2,&lt;/code>&lt;/p>
+&lt;p>&lt;code>V4L2_MEMORY_OVERLAY          = 3,&lt;/code>&lt;/p>
+&lt;p>&lt;code>};&lt;/code>&lt;/p>
+&lt;p>count 指定根据图像占用空间大小申请的缓存区个数，type 为视频捕获模式，memory 为内存区的使用方式。&lt;/p>
+&lt;p>1&lt;/p>
+&lt;p>2&lt;/p>
+&lt;p>3&lt;/p>
+&lt;p>4&lt;/p>
+&lt;p>5&lt;/p>
+&lt;p>6&lt;/p>
+&lt;p>7&lt;/p>
+&lt;p>8&lt;/p>
+&lt;p>9&lt;/p>
+&lt;p>10&lt;/p>
+&lt;p>11&lt;/p>
+&lt;p>12&lt;/p>
+&lt;p>13&lt;/p>
+&lt;p>14&lt;/p>
+&lt;p>15&lt;/p>
+&lt;p>16&lt;/p>
+&lt;p>17&lt;/p>
+&lt;p>18&lt;/p>
+&lt;p>19&lt;/p>
+&lt;p>20&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_buffer {&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32   index;&lt;/code>&lt;/p>
+&lt;p>&lt;code>enum&lt;/code> &lt;code>v4l2_buf_type    type;&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32    bytesused;&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32    flags;&lt;/code>&lt;/p>
+&lt;p>&lt;code>enum&lt;/code> &lt;code>v4l2_field  field;&lt;/code>&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>timeval    timestamp;&lt;/code>&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_timecode   timecode;&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32     sequence;&lt;/code>&lt;/p>
+&lt;p>&lt;code>/* memory location */&lt;/code>&lt;/p>
+&lt;p>&lt;code>enum&lt;/code> &lt;code>v4l2_memory    memory;&lt;/code>&lt;/p>
+&lt;p>&lt;code>union&lt;/code> &lt;code>{&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32   offset;&lt;/code>&lt;/p>
+&lt;p>&lt;code>unsigned ``long&lt;/code>   &lt;code>userptr;&lt;/code>&lt;/p>
+&lt;p>&lt;code>} m;&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32    length;&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32    input;&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32    reserved;&lt;/code>&lt;/p>
+&lt;p>&lt;code>};&lt;/code>&lt;/p>
+&lt;p>index 为缓存编号 type 为视频捕获模式 bytesused 为缓存已使用空间大小 flags 为缓存当前状态（常见值有 V4L2_BUF_FLAG_MAPPED | V4L2_BUF_FLAG_QUEUED | V4L2_BUF_FLAG_DONE，分别代表当前缓存已经映射、缓存可以采集数据、缓存可以提取数据） timestamp 为时间戳 sequence为缓存序号 memory 为缓存使用方式 offset 为当前缓存与内存区起始地址的偏移 length 为缓存大小 reserved 一般用于传递物理地址值。 另外 VIDIOC_QBUF 和 VIDIOC_DQBUF 命令都采用结构 v4l2_buffer 与驱动通信：VIDIOC_QBUF 命令向驱动传递应用程序已经处理完的缓存，即将缓存加入空闲可捕获视频的队列，传递的主要参数为 index；VIDIOC_DQBUF 命令向驱动获取已经存放有视频数据的缓存，v4l2_buffer 的各个域几乎都会被更新，但主要的参数也是 index，应用程序会根据 index 确定可用数据的起始地址和范围。  &lt;/p>
+&lt;p>2、常用的IOCTL接口命令也在include/linux/videodev2.h中定义&lt;/p>
+&lt;p>VIDIOC_REQBUFS //分配内存 VIDIOC_QUERYBUF         //把VIDIOC_REQBUFS中分配的数据缓存转换成物理地址 VIDIOC_QUERYCAP        //查询驱动功能 VIDIOC_ENUM_FMT        //获取当前驱动支持的视频格式 VIDIOC_S_FMT        //设置当前驱动的频捕获格式 VIDIOC_G_FMT        //读取当前驱动的频捕获格式 VIDIOC_TRY_FMT        //验证当前驱动的显示格式 VIDIOC_CROPCAP        //查询驱动的修剪能力 VIDIOC_S_CROP        //设置视频信号的矩形边框 VIDIOC_G_CROP        //读取视频信号的矩形边框 VIDIOC_QBUF        //把数据从缓存中读取出来 VIDIOC_DQBUF        //把数据放回缓存队列 VIDIOC_STREAMON        //开始视频显示函数 VIDIOC_STREAMOFF        //结束视频显示函数 VIDIOC_QUERYSTD         //检查当前视频设备支持的标准，例如PAL或NTSC。&lt;/p>
+&lt;h2 id="三调用v4l2的工作流程">三、调用v4l2的工作流程&lt;/h2>
+&lt;p>　　打开设备－&amp;gt; 检查和设置设备属性－&amp;gt; 设置帧格式－&amp;gt; 设置一种输入输出方法（缓冲 区管理）－&amp;gt; 循环获取数据－&amp;gt; 关闭设备。&lt;/p>
+&lt;p>&lt;strong>（1）打开设备文件&lt;/strong>&lt;/p>
+&lt;p>　　打开视频设备非常简单，在V4L2中，视频设备被看做一个文件。使用open函数打开这个设备： 1. 用非阻塞模式打开摄像头设备 int cameraFd; cameraFd = open(&amp;quot;/dev/video0&amp;quot;, O_RDWR | O_NONBLOCK); 2. 如果用阻塞模式打开摄像头设备，上述代码变为： cameraFd = open(&amp;quot;/dev/video0&amp;quot;, O_RDWR); 关于阻塞模式和非阻塞模式 应用程序能够使用阻塞模式或非阻塞模式打开视频设备，如果使用非阻塞模式调用视频设备，即使尚未捕获到信息，驱动依旧会把缓存（DQBUFF）里的东西返回给应用程序。&lt;/p>
+&lt;p>&lt;strong>（2）取得设备的capability&lt;/strong>&lt;/p>
+&lt;p>          struct v4l2_capability capability； int ret = ioctl(fd, VIDIOC_QUERYCAP, &amp;amp;capability);&lt;/p>
+&lt;p>　　看看设备具有什么功能，比如是否具有视频输入特性。&lt;/p>
+&lt;p>1&lt;/p>
+&lt;p>2&lt;/p>
+&lt;p>3&lt;/p>
+&lt;p>4&lt;/p>
+&lt;p>5&lt;/p>
+&lt;p>6&lt;/p>
+&lt;p>7&lt;/p>
+&lt;p>8&lt;/p>
+&lt;p>9&lt;/p>
+&lt;p>10&lt;/p>
+&lt;p>11&lt;/p>
+&lt;p>12&lt;/p>
+&lt;p>13&lt;/p>
+&lt;p>14&lt;/p>
+&lt;p>15&lt;/p>
+&lt;p>16&lt;/p>
+&lt;p>17&lt;/p>
+&lt;p>18&lt;/p>
+&lt;p>19&lt;/p>
+&lt;p>20&lt;/p>
+&lt;p>21&lt;/p>
+&lt;p>22&lt;/p>
+&lt;p>23&lt;/p>
+&lt;p>24&lt;/p>
+&lt;p>25&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_capability cap;&lt;/code>&lt;/p>
+&lt;p>&lt;code>memset``(&amp;amp;cap, 0, ``sizeof``(cap));&lt;/code>&lt;/p>
+&lt;p>&lt;code>/* 获取设备支持的操作 */&lt;/code>&lt;/p>
+&lt;p>&lt;code>if``(ioctl(dev-&amp;gt;fd, VIDIOC_QUERYCAP, &amp;amp;cap) &amp;lt; 0){&lt;/code>&lt;/p>
+&lt;p>&lt;code>if``(EINVAL == ``errno``){   ``/*EINVAL为返回的错误值*/&lt;/code>&lt;/p>
+&lt;p>&lt;code>printf``(stderr,``&amp;quot;%s is no V4L2 device\n&amp;quot;``, dev-&amp;gt;dev);&lt;/code>&lt;/p>
+&lt;p>&lt;code>return&lt;/code> &lt;code>TFAIL;&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>&lt;code>else&lt;/code>&lt;/p>
+&lt;p>&lt;code>{&lt;/code>&lt;/p>
+&lt;p>&lt;code>printf``(stderr,``&amp;quot;%s is not V4L2 device,unknow error\n&amp;quot;``, dev-&amp;gt;dev);&lt;/code>&lt;/p>
+&lt;p>&lt;code>return&lt;/code> &lt;code>TFAIL;&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>&lt;code>//获取成功，检查是否有视频捕获功能&lt;/code>&lt;/p>
+&lt;p>&lt;code>if``(!(cap.capabilities &amp;amp; V4L2_CAP_VIDEO_CAPTURE)){&lt;/code>&lt;/p>
+&lt;p>&lt;code>printf``(stderr, ``&amp;quot;%s is no video capture device\n&amp;quot;``,dev-&amp;gt;dev);&lt;/code>&lt;/p>
+&lt;p>&lt;code>return&lt;/code> &lt;code>TFAIL;&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>&lt;code>/* streaming I/O ioctls */&lt;/code>&lt;/p>
+&lt;p>&lt;code>if``(!(cap.capabilities &amp;amp; V4L2_CAP_STREAMING)){&lt;/code>&lt;/p>
+&lt;p>&lt;code>printf``(stderr, ``&amp;quot;%s does not support streaming i/o\n&amp;quot;``,dev-&amp;gt;dev);&lt;/code>&lt;/p>
+&lt;p>&lt;code>return&lt;/code> &lt;code>TFAIL;&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>&lt;strong>（3）选择视频输入&lt;/strong> struct v4l2_input input； ……初始化input int ret = ioctl(fd, VIDIOC_QUERYCAP, &amp;amp;input); 一个视频设备可以有多个视频输入。如果只有一路输入，这个功能可以没有。 VIDIOC_G_INPUT 和 VIDIOC_S_INPUT 用来查询和选则当前的 input，一个 video 设备节点可能对应多个视频源，比如 saf7113 可以最多支持四路 cvbs 输入，如果上层想在四个cvbs视频输入间切换，那么就要调用 ioctl(fd, VIDIOC_S_INPUT, &amp;amp;input) 来切换。VIDIOC_G_INPUT and VIDIOC_G_OUTPUT 返回当前的 video input和output的index.&lt;/p>
+&lt;p>1&lt;/p>
+&lt;p>2&lt;/p>
+&lt;p>3&lt;/p>
+&lt;p>4&lt;/p>
+&lt;p>5&lt;/p>
+&lt;p>6&lt;/p>
+&lt;p>7&lt;/p>
+&lt;p>8&lt;/p>
+&lt;p>9&lt;/p>
+&lt;p>10&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_input {&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32 index; ``/* Which input *&lt;/code>&lt;/p>
+&lt;p>&lt;code>/__u8 name[32]; /* Label */&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32 type; ``/* Type of input */&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32 audioset; ``/* Associated audios (bitfield) */&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32 tuner; ``/* Associated tuner */&lt;/code>&lt;/p>
+&lt;p>&lt;code>v4l2_std_id std;&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32 status;&lt;/code>&lt;/p>
+&lt;p>&lt;code>__u32 reserved[4];&lt;/code>&lt;/p>
+&lt;p>&lt;code>};&lt;/code>&lt;/p>
+&lt;p>&lt;strong>（4）检测视频支持的制式&lt;/strong> v4l2_std_id std; do { ret = ioctl(fd, VIDIOC_QUERYSTD, &amp;amp;std); } while (ret == -1 &amp;amp;&amp;amp; errno == EAGAIN); switch (std) { case V4L2_STD_NTSC: //…… case V4L2_STD_PAL: //…… } &lt;strong>（5）设置视频捕获格式&lt;/strong> v4l2_format 结构体用来设置摄像头的视频制式、帧格式等，在设置这个参数时应先填 好 v4l2_format 的各个域，如 type（传输流类型），fmt.pix.width(宽)，fmt.pix.heigth(高)，fmt.pix.field(采样区域，如隔行采样)，fmt.pix.pixelformat(采样类型，如 YUV4:2:2)，然后通过 VIDIO_S_FMT 操作命令设置视频捕捉格式。&lt;/p>
+&lt;p>1&lt;/p>
+&lt;p>2&lt;/p>
+&lt;p>3&lt;/p>
+&lt;p>4&lt;/p>
+&lt;p>5&lt;/p>
+&lt;p>6&lt;/p>
+&lt;p>7&lt;/p>
+&lt;p>8&lt;/p>
+&lt;p>9&lt;/p>
+&lt;p>10&lt;/p>
+&lt;p>11&lt;/p>
+&lt;p>12&lt;/p>
+&lt;p>13&lt;/p>
+&lt;p>14&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_format fmt;&lt;/code>&lt;/p>
+&lt;p>&lt;code>memset``(&amp;amp;fmt, 0, ``sizeof``(fmt));&lt;/code>&lt;/p>
+&lt;p>&lt;code>fmt.type                = V4L2_BUF_TYPE_VIDEO_CAPTURE;&lt;/code>&lt;/p>
+&lt;p>&lt;code>fmt.fmt.pix.width       = g_display_width;&lt;/code>&lt;/p>
+&lt;p>&lt;code>fmt.fmt.pix.height      = g_display_height;&lt;/code>&lt;/p>
+&lt;p>&lt;code>fmt.fmt.pix.pixelformat = g_fmt;&lt;/code>&lt;/p>
+&lt;p>&lt;code>fmt.fmt.pix.field       = V4L2_FIELD_INTERLACED;&lt;/code>&lt;/p>
+&lt;p>&lt;code>/* 设置设备捕获视频的格式 */&lt;/code>&lt;/p>
+&lt;p>&lt;code>if``(ioctl(dev-&amp;gt;fd, VIDIOC_S_FMT, &amp;amp;fmt) &amp;lt; 0)&lt;/code>&lt;/p>
+&lt;p>&lt;code>{&lt;/code>&lt;/p>
+&lt;p>&lt;code>printf``(stderr, ``&amp;quot;%s iformat not supported \n&amp;quot;``,dev-&amp;gt;dev);&lt;/code>&lt;/p>
+&lt;p>&lt;code>close(dev-&amp;gt;fd);&lt;/code>&lt;/p>
+&lt;p>&lt;code>return&lt;/code> &lt;code>TFAIL;&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>**注意：**如果该视频设备驱动不支持你所设定的图像格式，视频驱动会重新修改struct v4l2_format结构体变量的值为该视频设备所支持的图像格式，所以在程序设计中，设定完所有的视频格式后，要获取实际的视频格式，要重新读取struct v4l2_format结构体变量。 &lt;strong>（6）向驱动申请帧缓存&lt;/strong> 一般不超过5个，CAP_BUF_NUM = 4&lt;/p>
+&lt;p>1&lt;/p>
+&lt;p>2&lt;/p>
+&lt;p>3&lt;/p>
+&lt;p>4&lt;/p>
+&lt;p>5&lt;/p>
+&lt;p>6&lt;/p>
+&lt;p>7&lt;/p>
+&lt;p>8&lt;/p>
+&lt;p>9&lt;/p>
+&lt;p>10&lt;/p>
+&lt;p>11&lt;/p>
+&lt;p>12&lt;/p>
+&lt;p>13&lt;/p>
+&lt;p>14&lt;/p>
+&lt;p>15&lt;/p>
+&lt;p>16&lt;/p>
+&lt;p>17&lt;/p>
+&lt;p>18&lt;/p>
+&lt;p>19&lt;/p>
+&lt;p>20&lt;/p>
+&lt;p>21&lt;/p>
+&lt;p>22&lt;/p>
+&lt;p>23&lt;/p>
+&lt;p>24&lt;/p>
+&lt;p>25&lt;/p>
+&lt;p>26&lt;/p>
+&lt;p>27&lt;/p>
+&lt;p>28&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_requestbuffers req;&lt;/code>&lt;/p>
+&lt;p>&lt;code>/* 申请设备的缓存区 */&lt;/code>&lt;/p>
+&lt;p>&lt;code>memset``(&amp;amp;req, 0, ``sizeof``(req));&lt;/code>&lt;/p>
+&lt;p>&lt;code>req.count = CAP_BUF_NUM;  ``//申请一个拥有四个缓冲帧的缓冲区&lt;/code>&lt;/p>
+&lt;p>&lt;code>req.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;&lt;/code>&lt;/p>
+&lt;p>&lt;code>req.memory = V4L2_MEMORY_MMAP;&lt;/code>&lt;/p>
+&lt;p>&lt;code>if&lt;/code> &lt;code>(ioctl(dev-&amp;gt;fd, VIDIOC_REQBUFS, &amp;amp;req) &amp;lt; 0)&lt;/code>&lt;/p>
+&lt;p>&lt;code>{&lt;/code>&lt;/p>
+&lt;p>&lt;code>if&lt;/code> &lt;code>(EINVAL == ``errno``)&lt;/code>&lt;/p>
+&lt;p>&lt;code>{&lt;/code>&lt;/p>
+&lt;p>&lt;code>printf``(stderr, ``&amp;quot;%s does not support &amp;quot;&lt;/code>&lt;/p>
+&lt;p>&lt;code>&amp;quot;memory mapping\n&amp;quot;``, dev-&amp;gt;dev);&lt;/code>&lt;/p>
+&lt;p>&lt;code>return&lt;/code> &lt;code>TFAIL;&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>&lt;code>else&lt;/code>&lt;/p>
+&lt;p>&lt;code>{&lt;/code>&lt;/p>
+&lt;p>&lt;code>printf``(stderr, ``&amp;quot;%s does not support &amp;quot;&lt;/code>&lt;/p>
+&lt;p>&lt;code>&amp;quot;memory mapping, unknow error\n&amp;quot;``, dev-&amp;gt;dev);&lt;/code>&lt;/p>
+&lt;p>&lt;code>return&lt;/code> &lt;code>TFAIL;&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>&lt;code>if&lt;/code> &lt;code>(req.count &amp;lt; 2)&lt;/code>&lt;/p>
+&lt;p>&lt;code>{&lt;/code>&lt;/p>
+&lt;p>&lt;code>printf``(stderr, ``&amp;quot;Insufficient buffer memory on %s\n&amp;quot;``,&lt;/code>&lt;/p>
+&lt;p>&lt;code>dev-&amp;gt;dev);&lt;/code>&lt;/p>
+&lt;p>&lt;code>return&lt;/code> &lt;code>TFAIL;&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>v4l2_requestbuffers结构中定义了缓存的数量，驱动会据此申请对应数量的视频缓存。多个缓存可以用于建立FIFO，来提高视频采集的效率。控制命令VIDIOC_REQBUFS 功能： 请求V4L2驱动分配视频缓冲区（申请V4L2视频驱动分配内存），V4L2是视频设备的驱动层，位于内核空间，所以通过VIDIOC_REQBUFS控制命令字申请的内存位于内核空间，应用程序不能直接访问，需要通过调用mmap内存映射函数把内核空间内存映射到用户空间后，应用程序通过访问用户空间地址来访问内核空间。 参数说明：参数类型为V4L2的申请缓冲区数据结构体类型struct v4l2_requestbuffers  ； 返回值说明： 执行成功时，函数返回值为 0；V4L2驱动层分配好了视频缓冲区； &lt;strong>（7）获取每个缓存的信息，并mmap到用户空间&lt;/strong> 应用程序和设备有三种交换数据的方法，直接 read/write、内存映射(memory mapping)和用户指针。这里只讨论内存映射(memory mapping)。&lt;/p>
+&lt;p>1&lt;/p>
+&lt;p>2&lt;/p>
+&lt;p>3&lt;/p>
+&lt;p>4&lt;/p>
+&lt;p>5&lt;/p>
+&lt;p>6&lt;/p>
+&lt;p>7&lt;/p>
+&lt;p>8&lt;/p>
+&lt;p>9&lt;/p>
+&lt;p>10&lt;/p>
+&lt;p>11&lt;/p>
+&lt;p>12&lt;/p>
+&lt;p>13&lt;/p>
+&lt;p>14&lt;/p>
+&lt;p>15&lt;/p>
+&lt;p>16&lt;/p>
+&lt;p>17&lt;/p>
+&lt;p>18&lt;/p>
+&lt;p>19&lt;/p>
+&lt;p>20&lt;/p>
+&lt;p>21&lt;/p>
+&lt;p>22&lt;/p>
+&lt;p>23&lt;/p>
+&lt;p>24&lt;/p>
+&lt;p>25&lt;/p>
+&lt;p>26&lt;/p>
+&lt;p>27&lt;/p>
+&lt;p>28&lt;/p>
+&lt;p>29&lt;/p>
+&lt;p>30&lt;/p>
+&lt;p>&lt;code>typedef&lt;/code> &lt;code>struct&lt;/code> &lt;code>VideoBuffer {   ``//定义一个结构体来映射每个缓冲帧&lt;/code>&lt;/p>
+&lt;p>&lt;code>void&lt;/code> &lt;code>*start;&lt;/code>&lt;/p>
+&lt;p>&lt;code>size_t&lt;/code> &lt;code>length;&lt;/code>&lt;/p>
+&lt;p>&lt;code>} VideoBuffer;&lt;/code>&lt;/p>
+&lt;p>&lt;code>VideoBuffer* buffers = ``calloc``( req.count, ``sizeof``(*buffers) );&lt;/code>&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_buffer buf;&lt;/code>&lt;/p>
+&lt;p>&lt;code>for&lt;/code> &lt;code>(numBufs = 0; numBufs &amp;lt; req.count; numBufs++) {``//映射所有的缓存&lt;/code>&lt;/p>
+&lt;p>&lt;code>memset``( &amp;amp;buf, 0, ``sizeof``(buf) );&lt;/code>&lt;/p>
+&lt;p>&lt;code>buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;&lt;/code>&lt;/p>
+&lt;p>&lt;code>buf.memory = V4L2_MEMORY_MMAP;&lt;/code>&lt;/p>
+&lt;p>&lt;code>buf.index = numBufs;&lt;/code>&lt;/p>
+&lt;p>&lt;code>if&lt;/code> &lt;code>(ioctl(fd, VIDIOC_QUERYBUF, &amp;amp;buf) == -1) {``//获取到对应index的缓存信息，此处主要利用length信息及offset信息来完成后面的mmap操作。&lt;/code>&lt;/p>
+&lt;p>&lt;code>return&lt;/code> &lt;code>-1;&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>&lt;code>buffers[numBufs].length = buf.length;&lt;/code>&lt;/p>
+&lt;p>&lt;code>// 转换成相对地址&lt;/code>&lt;/p>
+&lt;p>&lt;code>buffers[numBufs].start = mmap(NULL, buf.length,&lt;/code>&lt;/p>
+&lt;p>&lt;code>PROT_READ | PROT_WRITE,&lt;/code>&lt;/p>
+&lt;p>&lt;code>MAP_SHARED,&lt;/code>&lt;/p>
+&lt;p>&lt;code>fd, buf.m.offset);&lt;/code>&lt;/p>
+&lt;p>&lt;code>if&lt;/code> &lt;code>(buffers[numBufs].start == MAP_FAILED) {&lt;/code>&lt;/p>
+&lt;p>&lt;code>return&lt;/code> &lt;code>-1;&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>&lt;code>//addr 映射起始地址，一般为NULL ，让内核自动选择&lt;/code>&lt;/p>
+&lt;p>&lt;code>//length 被映射内存块的长度&lt;/code>&lt;/p>
+&lt;p>&lt;code>//prot 标志映射后能否被读写，其值为PROT_EXEC,PROT_READ,PROT_WRITE, PROT_NONE&lt;/code>&lt;/p>
+&lt;p>&lt;code>//flags 确定此内存映射能否被其他进程共享，MAP_SHARED,MAP_PRIVATE&lt;/code>&lt;/p>
+&lt;p>&lt;code>//fd,offset, 确定被映射的内存地址 返回成功映射后的地址，不成功返回MAP_FAILED ((void*)-1)&lt;/code>&lt;/p>
+&lt;p>&lt;code>int&lt;/code> &lt;code>munmap(``void&lt;/code> &lt;code>*addr, ``size_t&lt;/code> &lt;code>length);``// 断开映射&lt;/code>&lt;/p>
+&lt;p>&lt;code>//addr 为映射后的地址，length 为映射后的内存长度&lt;/code>&lt;/p>
+&lt;p>&lt;strong>（8）开始采集视频 (在缓冲区处理好之后就可以获得视频了 )&lt;/strong> 在开始之前，还应当把缓冲帧放入缓冲队列，应用程序和设备有三种交换数据的方法，直接 &lt;strong>read/write&lt;/strong>、&lt;strong>内存映射(memory mapping)和用户指针&lt;/strong>。这里只讨论内存映射(memory mapping)。&lt;/p>
+&lt;p>1&lt;/p>
+&lt;p>2&lt;/p>
+&lt;p>3&lt;/p>
+&lt;p>4&lt;/p>
+&lt;p>5&lt;/p>
+&lt;p>6&lt;/p>
+&lt;p>7&lt;/p>
+&lt;p>8&lt;/p>
+&lt;p>9&lt;/p>
+&lt;p>10&lt;/p>
+&lt;p>11&lt;/p>
+&lt;p>12&lt;/p>
+&lt;p>13&lt;/p>
+&lt;p>14&lt;/p>
+&lt;p>15&lt;/p>
+&lt;p>16&lt;/p>
+&lt;p>17&lt;/p>
+&lt;p>18&lt;/p>
+&lt;p>19&lt;/p>
+&lt;p>20&lt;/p>
+&lt;p>21&lt;/p>
+&lt;p>22&lt;/p>
+&lt;p>23&lt;/p>
+&lt;p>&lt;code>//把四个缓冲帧放入队列&lt;/code>&lt;/p>
+&lt;p>&lt;code>for&lt;/code> &lt;code>(i = 0; i &amp;lt; CAP_BUF_NUM; i++)&lt;/code>&lt;/p>
+&lt;p>&lt;code>{&lt;/code>&lt;/p>
+&lt;p>&lt;code>memset``(&amp;amp;buf, 0, ``sizeof``(buf));&lt;/code>&lt;/p>
+&lt;p>&lt;code>buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;&lt;/code>&lt;/p>
+&lt;p>&lt;code>buf.memory = V4L2_MEMORY_MMAP;&lt;/code>&lt;/p>
+&lt;p>&lt;code>buf.index = i;&lt;/code>&lt;/p>
+&lt;p>&lt;code>buf.m.offset = dev-&amp;gt;buffer[i].offset;&lt;/code>&lt;/p>
+&lt;p>&lt;code>/* 将空闲的内存加入可捕获视频的队列 */&lt;/code>&lt;/p>
+&lt;p>&lt;code>if``(ioctl(dev-&amp;gt;fd, VIDIOC_QBUF, &amp;amp;buf) &amp;lt; 0)&lt;/code>&lt;/p>
+&lt;p>&lt;code>{&lt;/code>&lt;/p>
+&lt;p>&lt;code>printf``(``&amp;quot;ERROR: VIDIOC_QBUF[%s], FUNC[%s], LINE[%d]\n&amp;quot;``, dev-&amp;gt;dev, __FUNCTION__, __LINE__);&lt;/code>&lt;/p>
+&lt;p>&lt;code>return&lt;/code> &lt;code>TFAIL;&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>&lt;code>type = V4L2_BUF_TYPE_VIDEO_CAPTURE;&lt;/code>&lt;/p>
+&lt;p>&lt;code>/* 打开设备视频流 */&lt;/code>&lt;/p>
+&lt;p>&lt;code>if``(ioctl(dev-&amp;gt;fd, VIDIOC_STREAMON, &amp;amp;type) &amp;lt; 0)&lt;/code>&lt;/p>
+&lt;p>&lt;code>{&lt;/code>&lt;/p>
+&lt;p>&lt;code>printf``(``&amp;quot;ERROR: VIDIOC_STREAMON[%s], FUNC[%s], LINE[%d]\n&amp;quot;``, dev-&amp;gt;dev, __FUNCTION__, __LINE__);&lt;/code>&lt;/p>
+&lt;p>&lt;code>return&lt;/code> &lt;code>TFAIL;&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>前期初始化完成后，只是解决了一帧视频数据的格式和大小问题，而连续视频帧数据的采集需要用帧缓冲区队列的方式来解决，即要通过驱动程序在内存中申请几个帧缓冲区来存放视频数据。 应用程序通过API接口提供的方法(VIDIOC_REQBUFS)申请若干个视频数据的帧缓冲区，申请帧缓冲区数量一般不低于3个，每个帧缓冲区存放一帧视频数据，这些帧缓冲区在内核空间。 应用程序通过API接口提供的查询方法(VIDIOC_QUERYBUF)查询到帧缓冲区在内核空间的长度和偏移量地址。 应用程序再通过内存映射方法(mmap)，将申请到的内核空间帧缓冲区的地址映射到用户空间地址，这样就可以直接处理帧缓冲区的数据。 (1)将帧缓冲区在视频输入队列排队，并启动视频采集 在驱动程序处理视频的过程中，定义了两个队列：视频采集输入队列(incoming queues)和视频采集输出队列(outgoing queues)，前者是等待驱动存放视频数据的队列，后者是驱动程序已经放入了视频数据的队列。如图2所示。 应用程序需要将上述帧缓冲区在视频采集输入队列排队(VIDIOC_QBUF)，然后可启动视频采集。 (2)循环往复，采集连续的视频数据 启动视频采集后，驱动程序开始采集一帧数据，把采集的数据放入视频采集输入队列的第一个帧缓冲区，一帧数据采集完成，也就是第一个帧缓冲区存满一帧数据后，驱动程序将该帧缓冲区移至视频采集输出队列，等待应用程序从输出队列取出。驱动程序接下来采集下一帧数据，放入第二个帧缓冲区，同样帧缓冲区存满下一帧数据后，被放入视频采集输出队列。 应用程序从视频采集输出队列中取出含有视频数据的帧缓冲区，处理帧缓冲区中的视频数据，如存储或压缩。 最后，应用程序将处理完数据的帧缓冲区重新放入视频采集输入队列,这样可以循环采集，如图1所示。 &lt;img src="http://www.xiangb.com/vga/UploadFiles_6698/201102/20110215120200245.jpg" alt=""> &lt;strong>（9）取出FIFO缓存中已经采样的帧缓存&lt;/strong>&lt;/p>
+&lt;p>1&lt;/p>
+&lt;p>2&lt;/p>
+&lt;p>3&lt;/p>
+&lt;p>4&lt;/p>
+&lt;p>5&lt;/p>
+&lt;p>6&lt;/p>
+&lt;p>7&lt;/p>
+&lt;p>8&lt;/p>
+&lt;p>9&lt;/p>
+&lt;p>10&lt;/p>
+&lt;p>11&lt;/p>
+&lt;p>12&lt;/p>
+&lt;p>13&lt;/p>
+&lt;p>&lt;code>struct&lt;/code> &lt;code>v4l2_buffer capture_buf；&lt;/code>&lt;/p>
+&lt;p>&lt;code>memset``(&amp;amp;capture_buf, 0, ``sizeof``(capture_buf));&lt;/code>&lt;/p>
+&lt;p>&lt;code>capture_buf.type = V4L2_BUF_TYPE_VIDEO_CAPTURE;&lt;/code>&lt;/p>
+&lt;p>&lt;code>capture_buf.memory = V4L2_MEMORY_MMAP;&lt;/code>&lt;/p>
+&lt;p>&lt;code>/* 将已经捕获好视频的内存拉出已捕获视频的队列 */&lt;/code>&lt;/p>
+&lt;p>&lt;code>if&lt;/code> &lt;code>(ioctl(dev.fd, VIDIOC_DQBUF, &amp;amp;capture_buf) &amp;lt; 0)&lt;/code>&lt;/p>
+&lt;p>&lt;code>{&lt;/code>&lt;/p>
+&lt;p>&lt;code>printf``(``&amp;quot;ERROR: VIDIOC_DQBUF[%s], FUNC[%s], LINE[%d]\n&amp;quot;``, dev, __FUNCTION__, __LINE__);&lt;/code>&lt;/p>
+&lt;p>&lt;code>return&lt;/code> &lt;code>TFAIL;&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>&lt;code>}&lt;/code>&lt;/p>
+&lt;p>&lt;code>image_data_handle(buffer[capture_buf.index].start, capture_buf.bytesused);&lt;/code>&lt;/p>
+&lt;p>&lt;strong>（10）将刚刚处理完的缓冲重新入队列尾，这样可以循环采集&lt;/strong> if (ioctl(fd, VIDIOC_QBUF, &amp;amp;buf) == -1) { return -1; } &lt;strong>（11）停止视频的采集，解除映射&lt;/strong> int ret = ioctl(fd, VIDIOC_STREAMOFF, &amp;amp;buf_type);```
+　　munmap(buffer[j].start, buffer[j].length);&lt;/p>
+&lt;pre>&lt;code class="language-**（12）关闭视频设备**" data-lang="**（12）关闭视频设备**">
+　　设置视频的帧率，使用ioctl(fd\_v4l, VIDIOC\_S\_PARM, &amp;amp;parm)
+　　设置视频的旋转方式，使用ioctl(fd\_v4l, VIDIOC\_S\_CTRL, &amp;amp;ctrl)
+　　(4)向驱动申请视频流数据的帧缓冲区
+　　请求/申请若干个帧缓冲区，一般为不少于3个,使用ioctl(fd\_v4l, VIDIOC\_REQBUFS, &amp;amp;req)
+　　查询帧缓冲区在内核空间中的长度和偏移量 ioctl(fd\_v4l, VIDIOC\_QUERYBUF, &amp;amp;buf)
+　　(5)应用程序通过内存映射，将帧缓冲区的地址映射到用户空间，这样就可以直接操作采集到的帧了，而不必去复制。 buffers\[i\].start = mmap (NULL, buffers\[i\].length, PROT\_READ | PROT\_WRITE, MAP\_SHARED, fd\_v4l, buffers\[i\].offset); (6)将申请到的帧缓冲全部放入视频采集输出队列，以便存放采集的数据。ioctl (fd\_v4l, VIDIOC\_QBUF, &amp;amp;buf) (7)开始视频流数据的采集。 ioctl (fd\_v4l, VIDIOC\_STREAMON, &amp;amp;type) (8) 驱动将采集到的一帧视频数据存入输入队列第一个帧缓冲区，存完后将该帧缓冲区移至视频采集输出队列。 (9)应用程序从视频采集输出队列中取出已含有采集数据的帧缓冲区。ioctl (fd\_v4l, VIDIOC\_DQBUF, &amp;amp;buf) ，应用程序处理该帧缓冲区的原始视频数据。 (10)处理完后，应用程序的将该帧缓冲区重新排入输入队列,这样便可以循环采集数据。ioctl (fd\_v4l, VIDIOC\_QBUF, &amp;amp;buf) 重复上述步骤8到10，直到停止采集数据。 (11)停止视频的采集。ioctl (fd\_v4l, VIDIOC\_STREAMOFF, &amp;amp;type) (12)释放申请的视频帧缓冲区unmap，关闭视频设备文件close(fd\_v4l)。 以上的程序流程，包含了视频设备采集连续的视频数据的逻辑关系。而在实际运用中，往往还要加入对视频数据进行处理(如压缩编码)的工作，否则，视频流数据量相当大，需要很大的存储空间和传输带宽。&lt;/code>&lt;/pre>- /posts/zzv4l2%e7%9a%84%e5%ad%a6%e4%b9%a0%e5%bb%ba%e8%ae%ae%e5%92%8c%e6%b5%81%e7%a8%8b%e8%a7%a3%e6%9e%90/ - This is a customized copyright.</description></item><item><title>After upgrade to Fedora 28 cannot set locale</title><link>/posts/after-upgrade-to-fedora-28-cannot-set-locale/</link><pubDate>Sun, 29 Jul 2018 15:45:50 +0000</pubDate><guid>/posts/after-upgrade-to-fedora-28-cannot-set-locale/</guid><description>seteuid0's blog /posts/after-upgrade-to-fedora-28-cannot-set-locale/ -&lt;p>升级F28以后出现类似如下错误```
+[root@KlausPC opt]# LC_ALL=C
+[root@KlausPC opt]# LC_ALL=CX
+-bash: warning: setlocale: LC_ALL: cannot change locale (CX): No such file or directory
+[root@KlausPC opt]# LC_ALL=de_DE.utf8
+-bash: warning: setlocale: LC_ALL: cannot change locale (de_DE.utf8): No such file or directory
+[root@KlausPC opt]# exit
+logout
+[testuser@KlausPC ~]$ LC_ALL=de_DE.utf8
+bash: warning: setlocale: LC_ALL: cannot change locale (de_DE.utf8): No such file or directory
+[testuser@KlausPC ~]$ su -
+Password:
+-bash: Warnung: setlocale: LC_TIME: Kann die Standorteinstellungen nicht ��ndern (de_DE.UTF-8).
+[root@KlausPC ~]# LC_ALL=de_DE.utf8
+-bash: Warnung: setlocale: LC_ALL: Kann die Locale nicht ��ndern (de_DE.utf8): No such file or directory&lt;/p>
+&lt;pre>&lt;code class="language-解决方案如下：" data-lang="解决方案如下：">&lt;/code>&lt;/pre>- /posts/after-upgrade-to-fedora-28-cannot-set-locale/ - This is a customized copyright.</description></item><item><title>基于Aliyun自己实现DDNS</title><link>/posts/%e5%9f%ba%e4%ba%8ealiyun%e8%87%aa%e5%b7%b1%e5%ae%9e%e7%8e%b0ddns/</link><pubDate>Fri, 20 Jul 2018 18:37:01 +0000</pubDate><guid>/posts/%e5%9f%ba%e4%ba%8ealiyun%e8%87%aa%e5%b7%b1%e5%ae%9e%e7%8e%b0ddns/</guid><description>seteuid0's blog /posts/%e5%9f%ba%e4%ba%8ealiyun%e8%87%aa%e5%b7%b1%e5%ae%9e%e7%8e%b0ddns/ -&lt;p>很多时候需要在外面访问家里的电脑资源（如PC、NAS等），但由于个人宽带一般都是拨号上网没有固定的IP，所以如何实现随时获取家里IP是一个刚需。 开始前还是补充点前提条件，&lt;/p>
+&lt;ul>
+&lt;li>你的网络必须有一个公网IP，否则DDNS也无法解决你从其他地方访问的需求。如果是使用路由器拨号的可以在路由器界面上看到请求的IP地址。一般电信、联通可以提供公网的IP（如果分配的是局域网地址可以打服务号申请调整哦～），其他可能就不行了。&lt;/li>
+&lt;li>一般家里都会用一个路由器上多个设备同时上网，因此你需要掌握如果把一个机器的端口通过路由器暴露给公网，现在一般80端口都被封了，所以请选择其他端口测试。&lt;/li>
+&lt;/ul>
+&lt;p>其实实现随时获取网络IP有多种方式，例如可以自己写一个服务程序来获取请求者的IP地址，再在家里常开机器（如NAS或其他设备）上运行一个定时请求的客户端（如curl），这样你就可以通过这个服务做中转来随时获取家里的IP。 当然这个方案要求你有一个固定的IP来提供服务。这里主要介绍下基于aliyun sdk来实现自己的ddns。 花生壳等服务提供的就是DDNS功能，但要收费之类的， 如果你自己已经有一个域名，那为什么不自己动手来实现一个呢？说干就干。 简单搜索，发现网上有很多类似内容，以下简单记录下自己的实现方式。 首先， 登录（如果没有需要注册）aliyun管理控制台， 获取到AccessKey ID和AccessKey Secret ，这个可以理解成是程序通过sdk请求aliyun服务器的凭证。 方法参考[1] 然后，在你准备运行aliyun sdk接口的机器上安装aliyun的sdk```
+pip install aliyunsdkcore
+pip install aliyun-python-sdk-alidns&lt;/p>
+&lt;pre>&lt;code class="language-最后，就按照sdk开始编写代码" data-lang="最后，就按照sdk开始编写代码">&lt;/code>&lt;/pre>- /posts/%e5%9f%ba%e4%ba%8ealiyun%e8%87%aa%e5%b7%b1%e5%ae%9e%e7%8e%b0ddns/ - This is a customized copyright.</description></item><item><title>firewalld配置到虚拟机的端口转发</title><link>/posts/firewalld%e9%85%8d%e7%bd%ae%e5%88%b0%e8%99%9a%e6%8b%9f%e6%9c%ba%e7%9a%84%e7%ab%af%e5%8f%a3%e8%bd%ac%e5%8f%91/</link><pubDate>Tue, 29 May 2018 02:57:58 +0000</pubDate><guid>/posts/firewalld%e9%85%8d%e7%bd%ae%e5%88%b0%e8%99%9a%e6%8b%9f%e6%9c%ba%e7%9a%84%e7%ab%af%e5%8f%a3%e8%bd%ac%e5%8f%91/</guid><description>seteuid0's blog /posts/firewalld%e9%85%8d%e7%bd%ae%e5%88%b0%e8%99%9a%e6%8b%9f%e6%9c%ba%e7%9a%84%e7%ab%af%e5%8f%a3%e8%bd%ac%e5%8f%91/ -&lt;p>场景如下，假定服务器有公网IP，不同的业务可能运行到不同的虚拟机上，通过在服务器上配置不同的端口转发使请求转发到不同的虚拟机中。 实验环境如下：&lt;/p>
+&lt;ul>
+&lt;li>host： fedora27&lt;/li>
+&lt;li>guest: fedora27，ip是192.0.2.55&lt;/li>
+&lt;/ul>
+&lt;p>步骤：```
+#获取当前zone
+firewall-cmd &amp;ndash;get-active-zones
+#假定获取的zone为external,fedora返回的是FedoraWorkstation
+firewall-cmd &amp;ndash;zone=external &amp;ndash;add-masquerade
+#把host上的22端口转到192.0.2.55地址的2055端口
+firewall-cmd &amp;ndash;zone=external &amp;ndash;add-forward-port=port=22:proto=tcp:toport=2055:toaddr=192.0.2.55
+firewall-cmd &amp;ndash;reload
+#需要确认ip_forward处于开启状态
+net.ipv4.ip_forward = 1
+检查虚拟机的防火墙开起来对应的端口，或者干脆关闭防火墙。
+#其他的命令
+firewall-cmd &amp;ndash;zone=external &amp;ndash;add-forward-port=port=22:proto=tcp:toport=3753
+firewall-cmd &amp;ndash;zone=external &amp;ndash;add-forward-port=port=22:proto=tcp:toaddr=192.0.2.55
+查看：
+firewall-cmd &amp;ndash;list-all
+firewall-cmd &amp;ndash;zone=external &amp;ndash;list-forward-ports
+当然也可以使用qemu来实现端口转发，这里就不展开了。&lt;/p>
+&lt;pre>&lt;code>&lt;/code>&lt;/pre>- /posts/firewalld%e9%85%8d%e7%bd%ae%e5%88%b0%e8%99%9a%e6%8b%9f%e6%9c%ba%e7%9a%84%e7%ab%af%e5%8f%a3%e8%bd%ac%e5%8f%91/ - This is a customized copyright.</description></item><item><title>[zz]Windows 7下Git SSH 创建Key的步骤</title><link>/posts/zzwindows-7%e4%b8%8bgit-ssh-%e5%88%9b%e5%bb%bakey%e7%9a%84%e6%ad%a5%e9%aa%a4/</link><pubDate>Mon, 14 May 2018 15:19:35 +0000</pubDate><guid>/posts/zzwindows-7%e4%b8%8bgit-ssh-%e5%88%9b%e5%bb%bakey%e7%9a%84%e6%ad%a5%e9%aa%a4/</guid><description>seteuid0's blog /posts/zzwindows-7%e4%b8%8bgit-ssh-%e5%88%9b%e5%bb%bakey%e7%9a%84%e6%ad%a5%e9%aa%a4/ -&lt;p>一直都是使用Linux系统，使用git感觉也很自然，现在要用下windows系统，还是要找个资料学习下，转载的这篇文章记录的还挺详细，故转载分享下。 转载内容如下： 当我们使用github或者bitbucket等仓库时我们有可能需要ssh认证，所以需要生成他的ssh key。 1、首先你要安装git工具 下载地址：&lt;a href="https://git-scm.com/downloads">https://git-scm.com/downloads&lt;/a> 2、右键鼠标，选中 “Git Bash here”，当然你也可以在windows的 “开始”&amp;mdash;&amp;gt;“所以程序”，或者安装目录打开它 &lt;img src="https://img-blog.csdn.net/20160729145054673?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt=""> 3、输入指令，进入.ssh文件夹&lt;/p>
+&lt;p>&lt;strong>[java]&lt;/strong> &lt;a href="https://blog.csdn.net/lsyz0021/article/details/52064829#" title="view plain">view plain&lt;/a> &lt;a href="https://blog.csdn.net/lsyz0021/article/details/52064829#" title="copy">copy&lt;/a>&lt;/p>
+&lt;ol>
+&lt;li>cd ~/.ssh/&lt;/li>
+&lt;/ol>
+&lt;p>&lt;img src="https://img-blog.csdn.net/20160729145510737?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt=""> 如果提示 “ No such file or directory”，你可以手动的创建一个 .ssh文件夹即可 命令为：&lt;/p>
+&lt;p>&lt;strong>[java]&lt;/strong> &lt;a href="https://blog.csdn.net/lsyz0021/article/details/52064829#" title="view plain">view plain&lt;/a> &lt;a href="https://blog.csdn.net/lsyz0021/article/details/52064829#" title="copy">copy&lt;/a>&lt;/p>
+&lt;ol>
+&lt;li>mkdir ~/.ssh&lt;/li>
+&lt;/ol>
+&lt;p>4、配置全局的name和email，这里是的你github或者bitbucket的name和email&lt;/p>
+&lt;p>&lt;strong>[java]&lt;/strong> &lt;a href="https://blog.csdn.net/lsyz0021/article/details/52064829#" title="view plain">view plain&lt;/a> &lt;a href="https://blog.csdn.net/lsyz0021/article/details/52064829#" title="copy">copy&lt;/a>&lt;/p>
+&lt;ol>
+&lt;li>
+&lt;p>git config &amp;ndash;global user.name &amp;ldquo;xkwg&amp;rdquo;&lt;/p>
+&lt;/li>
+&lt;li>
+&lt;p>git config &amp;ndash;global user.email &amp;ldquo;&lt;a href="mailto:xkwg@163.com">xkwg@163.com&lt;/a>&amp;rdquo;&lt;/p>
+&lt;/li>
+&lt;/ol>
+&lt;p>5、生成key&lt;/p>
+&lt;p>&lt;strong>[java]&lt;/strong> &lt;a href="https://blog.csdn.net/lsyz0021/article/details/52064829#" title="view plain">view plain&lt;/a> &lt;a href="https://blog.csdn.net/lsyz0021/article/details/52064829#" title="copy">copy&lt;/a>&lt;/p>
+&lt;ol>
+&lt;li>ssh-keygen -t rsa -C &amp;ldquo;&lt;a href="mailto:xkwg@163.com">xkwg@163.com&lt;/a>&amp;rdquo;&lt;/li>
+&lt;/ol>
+&lt;p>连续按三次回车，这里设置的密码就为空了，并且创建了key。 Your identification has been saved in /User/Admin/.ssh/id_rsa. Your public key has been saved in /User/Admin/.ssh/id_rsa.pub. The key fingerprint is: ……………… 最后得到了两个文件：id_rsa和id_rsa.pub 6、打开Admin目录进入.ssh文件夹，用记事本打开id_rsa.pub，复制里面的内容添加到你github或者bitbucket ssh设置里即可 &lt;img src="https://img-blog.csdn.net/20160729151051503?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt=""> &lt;img src="https://img-blog.csdn.net/20160729151109853?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt=""> 这是bitbucket的添加key，点击右上方的头像，选择设置，然后 &lt;img src="https://img-blog.csdn.net/20160729151520213?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt=""> 这是github添加key &lt;img src="https://img-blog.csdn.net/20160729151531089?watermark/2/text/aHR0cDovL2Jsb2cuY3Nkbi5uZXQv/font/5a6L5L2T/fontsize/400/fill/I0JBQkFCMA==/dissolve/70/gravity/Center" alt=""> 7、测试是否添加成功 bitbucket输入命令：&lt;/p>
+&lt;p>&lt;strong>[java]&lt;/strong> &lt;a href="https://blog.csdn.net/lsyz0021/article/details/52064829#" title="view plain">view plain&lt;/a> &lt;a href="https://blog.csdn.net/lsyz0021/article/details/52064829#" title="copy">copy&lt;/a>&lt;/p>
+&lt;ol>
+&lt;li>ssh -T git@bitbucket.org&lt;/li>
+&lt;/ol>
+&lt;p>  提示：“You can use git or hg to connect to Bitbucket. Shell access is disabled.” 说明添加成功了 github输入命令：&lt;/p>
+&lt;p>&lt;strong>[java]&lt;/strong> &lt;a href="https://blog.csdn.net/lsyz0021/article/details/52064829#" title="view plain">view plain&lt;/a> &lt;a href="https://blog.csdn.net/lsyz0021/article/details/52064829#" title="copy">copy&lt;/a>&lt;/p>
+&lt;ol>
+&lt;li>ssh git@github.com&lt;/li>
+&lt;/ol>
+&lt;p>提示：“Hi lsyz0021! You&amp;rsquo;ve successfully authenticated, but GitHub does not provide shel l access.”说明添加成功。&lt;/p>
+- /posts/zzwindows-7%e4%b8%8bgit-ssh-%e5%88%9b%e5%bb%bakey%e7%9a%84%e6%ad%a5%e9%aa%a4/ - This is a customized copyright.</description></item><item><title>drm</title><link>/posts/drm/</link><pubDate>Thu, 29 Mar 2018 00:51:27 +0000</pubDate><guid>/posts/drm/</guid><description>seteuid0's blog /posts/drm/ -&lt;h1 id="drm---direct-rendering-manager">DRM - Direct Rendering Manager&lt;/h1>
+&lt;p>DRM是一个内核级的设备驱动，既可以编译到内核中也可以作为标准模块进行加载。DRM最初是在FreeBSD中出现的，后来被移植到Linux系统中，并成为Linux系统的标准部分。 DRM可以直接访问DRM clients的硬件。DRM驱动用来处理DMA，内存管理，资源锁以及安全硬件访问。为了同时支持多个3D应用，3D图形卡硬件必须作为一个共享资源，因此需要锁来提供互斥访问。DMA传输和AGP接口用来发送图形操作的buffers到显卡硬件，因此要防止客户端越权访问显卡硬件。 Linux DRM层用来支持那些复杂的显卡设备，这些显卡设备通常都包含可编程的流水线，非常适合3D图像加速。内核中的DRM层，使得这些显卡驱动在进行内存管理，中断处理和DMA操作中变得更容易，并且可以为上层应用提供统一的接口。&lt;/p>
+- /posts/drm/ - This is a customized copyright.</description></item><item><title>[转]linux图形显示相关内容</title><link>/posts/%e8%bd%aclinux%e5%9b%be%e5%bd%a2%e6%98%be%e7%a4%ba%e7%9b%b8%e5%85%b3%e5%86%85%e5%ae%b9/</link><pubDate>Tue, 27 Feb 2018 12:19:05 +0000</pubDate><guid>/posts/%e8%bd%aclinux%e5%9b%be%e5%bd%a2%e6%98%be%e7%a4%ba%e7%9b%b8%e5%85%b3%e5%86%85%e5%ae%b9/</guid><description>seteuid0's blog /posts/%e8%bd%aclinux%e5%9b%be%e5%bd%a2%e6%98%be%e7%a4%ba%e7%9b%b8%e5%85%b3%e5%86%85%e5%ae%b9/ -&lt;h4 id="1-前言">1. 前言&lt;/h4>
+&lt;p>图形子系统是linux系统中比较复杂的子系统之一：对下，它要管理形态各异的、性能各异的显示相关的器件；对上，它要向应用程序提供易用的、友好的、功能强大的图形用户界面（GUI）。因此，它是linux系统中少有的、和用户空间程序（甚至是用户）息息相关的一个子系统。 本文是图形子系统分析文章的第一篇，也是提纲挈领的一篇，将会从整体上，对linux显示子系统做一个简单的概述，进而罗列出显示子系统的软件构成，后续的文章将会围绕这些软件一一展开分析。 注1：本文所有的描述将以原生linux系统为例（如Ubuntu、Debian等），对其它基于linux的系统（如Android），部分内容会不适用。 注2：本文很多图片都是从网上搜集而来的（很多是从维基百科）。虽然蜗窝的宗旨是用自己的语言表述，尽量自己画图，但是linux图形子系统太复杂了，蜗蜗的理解有限，而老外的图画的实在太好，蜗蜗觉得，再怎么努力，也画不出更好的了，因此本着为读者负责的态度，就直接copy了。&lt;/p>
+&lt;h4 id="2-概念介绍">2. 概念介绍&lt;/h4>
+&lt;h5 id="21-guigraphical-user-interface图形用户界面">2.1 GUI（Graphical User Interface，图形用户界面）&lt;/h5>
+&lt;p>linux图形子系统的本质，是提供图形化的人机交互（human-computer interaction）界面，也即常说的GUI（Graphical User Interface）。而人机交互的本质，是人脑通过人的输出设备（动作、声音等），控制电脑的输入设备，电脑经过一系列的处理后，经由电脑的输出设备将结果输出，人脑再通过人的输入设备接收电脑的输出，最终实现“人脑&amp;lt;&amp;ndash;&amp;gt;电脑”之间的人机交互。下面一幅摘自维基百科的图片（可从&lt;a href="https://upload.wikimedia.org/wikipedia/commons/a/a1/Linux_kernel_INPUT_OUPUT_evdev_gem_USB_framebuffer.svg">“这里”&lt;/a>查看比较清晰的SVG格式的原始图片），对上述过程做了很好的总结： &lt;a href="http://www.wowotech.net/content/uploadfile/201512/e8b11450422149.gif">&lt;img src="http://www.wowotech.net/content/uploadfile/201512/e8b11450422149.gif" alt="Linux_kernel_INPUT_OUPUT_evdev_gem_USB_framebuffer.svg" title="Linux_kernel_INPUT_OUPUT_evdev_gem_USB_framebuffer.svg">&lt;/a>&lt;/p>
+&lt;blockquote>
+&lt;p>该图以一个非常前卫的应用场景&amp;mdash;-虚拟现实（VR，Virtual Reality）游戏，说明了以图形化为主的人机交互过程： 1）人脑通过动作、声音（对人脑而言，是output），控制电脑的输入设备，包括键盘、鼠标、操作杆、麦克风、游戏手柄（包含加速度计、陀螺仪等传感器）。 2）电脑通过输入设备，接收人脑的指令，这些指令经过kernel Input subsystem、Middleware Gesture/Speech recognition等软件的处理，转换成应用程序（Game）可以识别的、有意义的信息。 3）应用程序（Game）根据输入信息，做出相应的反馈，主要包括图像和声音。对VR游戏而言，可能需要3D rendering，这可以借助openGL及其相应的用户空间driver实现。 4）应用程序的反馈，经由kernel的Video subsystem（如DRM/KMS）、audio subsystem（如ALSA），输出到电脑的输出设备上，包括显示设备（2D/3D）、扬声器/耳机（3D Positional Audio）、游戏手柄（力的反馈）等。 5）输出到显示设备上时，可能会经过图形加速模块（Graphics accelerator）。 注3：图中提到了VR场景的典型帧率（&lt;a href="mailto:1280%C3%97800@95fps">1280×800@95fps&lt;/a> for VR），这是一个非常庞大的信息输出，要求图形子系统能10.5ms的时间内，生成并输出一帧，以RGBA的数据格式为例，每秒需要处理的数据量是1280x800x95x4x8=3.11296Gb，压力和挑战是相当大的（更不用提1080P了）。&lt;/p>
+&lt;/blockquote>
+&lt;p>有关GUI更为详细的解释，请参考：&lt;a href="https://en.wikipedia.org/wiki/Graphical_user_interface" title="https://en.wikipedia.org/wiki/Graphical_user_interface">https://en.wikipedia.org/wiki/Graphical_user_interface&lt;/a>。&lt;/p>
+&lt;h5 id="22-windowing-system窗口系统">2.2 Windowing system（窗口系统）&lt;/h5>
+&lt;p>窗口系统，是GUI的一种（也是当前计算机设备、智能设备广泛使用的一种），以WIMP （windows、icons、menus、pointer) 的形式，提供人机交互接口。Linux系统中有很多窗口系统的实现，如X Window System、Wayland、Android SurfaceFlinger等，虽然形态各异，但思路大致相同，包含如下要点：&lt;/p>
+&lt;blockquote>
+&lt;p>1）一般都使用client-server架构，server（称作display server，或者windows server、compositor等等）管理所有输入设备，以及用于输出的显示设备。 2）应用程序作为display server的一个client，在自己窗口（window）中运行，并绘制自己的GUI。 3）client的绘图请求，都会提交给display server，display server响应并处理这些请求，以一定的规则混合、叠加，最终在有限的输出资源上（屏幕），显示多个应用程序的GUI。 3）display server和自己的client之间，通过某种类型的通信协议交互，该通信协议通常称作display server protocol。 4）display server protocol可以是基于网络的，甚至是网络透明的（&lt;a href="https://en.wikipedia.org/wiki/Network_transparency">network transparent&lt;/a>），如X Window System所使用的。也可以是其它类型的，如Android SurfaceFlinger所使用的binder。&lt;/p>
+&lt;/blockquote>
+&lt;p>有关Windowing system的详细解释，请参考：&lt;a href="https://en.wikipedia.org/wiki/Windowing_system" title="https://en.wikipedia.org/wiki/Windowing_system">https://en.wikipedia.org/wiki/Windowing_system&lt;/a>。&lt;/p>
+&lt;h5 id="23-x-window-system">2.3 X Window System&lt;/h5>
+&lt;p>似乎终于要进入正题了。 X Window System是Windowing System一种实现，广泛使用于UNIX-like的操作系统上（当然也包括Linux系统），由MIT（Massachusetts Institute of Technology，麻省理工学院）在1984年发布。下图（可从&lt;a href="https://upload.wikimedia.org/wikipedia/commons/0/03/X_client_server_example.svg">“这里”&lt;/a>查看比较清晰的SVG格式的原始图片）是它的典型架构： &lt;a href="http://www.wowotech.net/content/uploadfile/201512/30348d3c8c496ef98471f2b4bd6fda3020151217141925.png">&lt;img src="http://www.wowotech.net/content/uploadfile/201512/76fa54a98d094de7f36e1181ea12caff20151217141926.png" alt="X_client_server_example" title="X_client_server_example">&lt;/a>&lt;/p>
+&lt;blockquote>
+&lt;p>1）X Window System简称X，或者X11，或者X-Windows。之所以称作X，是因为在字母表中X位于W之后，而W是MIT在X之前所使用的GUI系统。之所以称作X11，是因为在1987年的时候，X Window System已经进化到第11个版本了，后续所有的X，都是基于X11版本发展而来的（变动不是很大）。为了方便，后续我们都以X代指X Window System。 2）X最初是由X.org（XOrg Foundation）维护，后来基于X11R6发展出来了最初专门给Intel X86架构PC使用的X，称作XFree86（提供X服务，它是自由的，它是基于Intel的PC平台）。而后XFree86发展成为几乎适用于所有类UNIX操作系统的X Window系统，因此在相当长的一段时间里，XFree86也是X的代名词。再后来，从2004年的时候，XFree86不再遵从GPL许可证发行，导致许多发行套件不再使用XFree86，转而使用Xorg，再加上Xorg在X维护工作上又趋于活跃，现在Xorg由成为X的代名词（具体可参考“&lt;a href="http://www.x.org/" title="http://www.x.org/">http://www.x.org/&lt;/a>”）。 3）X设计之初，制定了很多原则，其中一条&amp;mdash;-&amp;ldquo;It is as important to decide what a system is not as to decide what it is”，决定了X的“性格”，即：X只提供实现GUI环境的基本框架，如定义protocol、在显示设备上绘制基本的图形单元（点、线、面等等）、和鼠标键盘等输入设备交互、等等。它并没有实现UI设计所需的button、menu、window title-bar styles等元素，而是由第三方的应用程序提供。这就是Unix的哲学：只做我应该做、必须做的事情。这就是这么多年来，X能保持稳定的原因。也是Linux OS界面百花齐放（不统一）的原因，各有利弊吧，后续文章会展开讨论。 4）X包括X server和X client，它们之间通过X protocol通信。 5）X server接收X clients的显示请求，并输出到显示设备上，同时，会把输入设备的输入事件，转递给相应的X client。X server一般以daemon进程的形式存在。 6）X protocol是网络透明（network-transparently）的，也就是说，server和client可以位于同一台机器上的同一个操作系统中，也可以位于不同机器上的不同操作系统中（因此X是跨平台的）。这为远端GUI登录提供了便利，如上面图片所示的运行于remote computer 的terminal emulator，但它却可以被user computer的鼠标键盘控制，以及可以输出到user computer的显示器上。 注4：这种情况下，user computer充当server的角色，remote computer是client，有点别扭，需要仔细品味一下（管理输入设备和显示设备的是server）。 7）X将protocol封装为命令原语（X command primitives），以库的形式（xlib或者xcb）向client提供接口。X client（即应用程序）利用这些API，可以向X server发起2D（或3D，通过GLX等扩展，后面会介绍）的绘图请求。&lt;/p>
+&lt;/blockquote>
+&lt;p>有关X更为详细的介绍，请参考：&lt;a href="https://en.wikipedia.org/wiki/X_Window_System" title="https://en.wikipedia.org/wiki/X_Window_System">https://en.wikipedia.org/wiki/X_Window_System&lt;/a>，后续蜗蜗可能会在单独的文章中分析它。&lt;/p>
+&lt;h5 id="24-窗口管理器gui工具集桌面环境及其它">2.4 窗口管理器、GUI工具集、桌面环境及其它&lt;/h5>
+&lt;p>前面讲过，X作为Windowing system中的一种，只提供了实现GUI环境的基本框架，其它的UI设计所需的button、menu、window title-bar styles等基本元素，则是由第三方的应用程序提供。这些应用程序主要包括：窗口管理器（window manager）、GUI工具集（GUI widget toolkit）和桌面环境（desktop environment）。 窗口管理器负责控制应用程序窗口（application windows）的布局和外观，使每个应用程序窗口尽量以统一、一致的方式呈现给用户，如针对X的最简单的窗口管理程序&amp;ndash;twm（&lt;a href="https://en.wikipedia.org/wiki/Twm">Tab Window Manager&lt;/a>）。 GUI工具集是Windowing system之上的进一步的封装。还是以X为例，它通过xlib提供给应用程序的API，仅仅可以绘制基本的图形单元（点、线、面等等），这些基本的图形单元，要组合成复杂的应用程序，还有很多很多细碎、繁杂的任务要做。因此，一些特定的操作系统，会在X的基础上，封装出一些更为便利的GUI接口，方便应用程序使用，如Microwindows、GTK+、QT等等。 桌面环境是应用程序级别的封装，通过提供一系列界面一致、操作方式一致的应用程序，使系统以更为友好的方式向用户提供服务。Linux系统比较主流的桌面环境包括GNOME、KDE等等。&lt;/p>
+&lt;h5 id="25-3d渲染硬件加速opengl及其它">2.5 3D渲染、硬件加速、OpenGL及其它&lt;/h5>
+&lt;p>渲染（Render）在电脑绘图中，是指：用软件从模型生成图像的过程。模型是用严格定义的语言或者数据结构对于三维物体的描述，它包括几何、视点、纹理以及照明信息。图像是数字图像或者位图图像。 上面的定义摘录自“&lt;a href="http://baike.baidu.com/link?url=isLPUuJ_QLiecmU9BC_Xyh2vd8_4n9DDsRrDfvt3s9NHAmoZ5yxtG7RIOWdYCLJn862qIfigLdewFAvhEqpFI5HAm4nBP7fLRqg15v-7VqK">百度百科&lt;/a>”，它是着重提及“三维物体”，也就是我们常说的3D渲染。其实我们在GUI编程中习以为常的点、线、矩形等等的绘制，也是渲染的过程中，只不过是2D渲染。2D渲染面临的计算复杂度和性能问题没有3D厉害，因此渲染一般都是指3D渲染。 在计算机中，2D渲染一般是由CPU完成（也可以由专门的硬件模块完成）。3D渲染也可以由CPU完成，但面临性能问题，因此大多数平台都会使用单独硬件模块（GPU或者显卡）负责3D渲染。这种通过特定功能的硬件模块，来处理那些CPU不擅长的事务的方法，称作硬件加速（Hardware acceleration），相应的硬件模块，就是硬件加速模块。 众所周知，硬件设备是多种多样的，为了方便应用程序的开发，需要一个稳定的、最好是跨平台的API，定义渲染有关的行为和动作。OpenGL（Open Graphics Library）就是这类API的一种，也是最为广泛接纳的一种。 虽然OpenGL只是一个API，但由于3D绘图的复杂性，它也是相当的复杂的。不过，归根结底，它的目的有两个：&lt;/p>
+&lt;blockquote>
+&lt;p>1）对上，屏蔽硬件细节，为应用程序提供相对稳定的、平台无关的3D图像处理API（当然，也可以是2D）。 2）对下，指引硬件相关的驱动软件，实现3D图像处理相关的功能。&lt;/p>
+&lt;/blockquote>
+&lt;p>另外，openGL的一个重要特性，是独立于操作系统和窗口系统而存在的，具体可以参考后面软件框架相关的章节。&lt;/p>
+&lt;h4 id="3-软件框架">3. 软件框架&lt;/h4>
+&lt;p>通过第2章的介绍，linux系统中图形有关的软件层次已经呼之欲出，具体如下： &lt;a href="http://www.wowotech.net/content/uploadfile/201512/5b56a76a97467a71495cd5b764b3ed4720151217141926.gif">&lt;img src="http://www.wowotech.net/content/uploadfile/201512/693b0f38e0eedfae1b233f276fb7aad120151217141926.gif" alt="display_software_layer" title="display_software_layer">&lt;/a> 该层次图中大部分的内容，已经在第2章解释过了，这里再补充说明一下：&lt;/p>
+&lt;blockquote>
+&lt;p>1）该图片没有体现3D渲染、硬件加速等有关的内容，而这些内容却是当下移动互联、智能化等产品比较关注的地方，也是linux平台相对薄弱的环节。后续会在软件框架有关的内容中再着重说明。 2）从层次结构的角度看，linux图形子系统是比较清晰的，但牵涉到每个层次上的实现的时候，就比较复杂了，因为有太多的选择了，这可归因于“提供机制，而非策略”的Unix软件准则。该准则为类Unix平台软件的多样性、针对性做出了很大的贡献，但在今天这种各类平台趋于整合的大趋势下，过多的实现会导致用户体验的不一致、开发者开发精力分散等弊端，值得我们思考。 3）虽然图形子系统的层次比较多，但不同的人可能关注的内容不太一样。例如对Linux系统工程师（驱动&amp;amp;中间件）而言，比较关注hardware、kernel和display server这三个层次。而对Application工程师来说，可能更比较关心GUI Toolkits。本文以及后续display subsystem的文章，主要以Linux系统工程师的视角，focus在hardware、kernel和display server（可能包括windows manager）上面。&lt;/p>
+&lt;/blockquote>
+&lt;p>以X window为例，将hardware、kernel和display server展开如下（可从&lt;a href="https://upload.wikimedia.org/wikipedia/commons/c/c2/Linux_Graphics_Stack_2013.svg">“这里”&lt;/a>查看比较清晰的SVG格式的原始图片）：&lt;a href="http://www.wowotech.net/content/uploadfile/201512/0e651450422536.gif">&lt;img src="http://www.wowotech.net/content/uploadfile/201512/0e651450422536.gif" alt="Linux_Graphics_Stack_2013.svg" title="Linux_Graphics_Stack_2013.svg">&lt;/a> From: &lt;a href="https://upload.wikimedia.org/wikipedia/commons/c/c2/Linux_Graphics_Stack_2013.svg" title="https://upload.wikimedia.org/wikipedia/commons/c/c2/Linux_Graphics_Stack_2013.svg">https://upload.wikimedia.org/wikipedia/commons/c/c2/Linux_Graphics_Stack_2013.svg&lt;/a> 对于软件架构而言，这张来自维基百科的图片并不是特别合适，因为它包含了太多的细节，从而显得有些杂乱。不过瑕不掩瑜，对本文的描述，也足够了。从向到下，图中包括如下的软件的软件模块： 1）3D-game engine、Applications和Toolkits，应用软件，其中3D-game engine是3D application的一个特例。 2）Display Server 图片给出了两个display server：Wayland compositor和X-Server（X.Org）。X-Server是linux系统在PC时代使用比较广泛的display server，而Wayland compositor则是新设计的，计划在移动时代取代X-Server的一个新的display server。 3）libX/libXCB和libwayland-client display server提供给Application（或者GUI Toolkits）的、访问server所提供功能的API。libX/libXCB对应X-server，libwayland-client对已Wayland compositor。 4）libGL libGL是openGL接口的实现，3D application（如这里的3D-game engine）可以直接调用libGL进行3D渲染。 libGL可以是各种不同类型的openGL实现，如openGL（for PC场景）、openGL|ES（for嵌入式场景）、openVG（for Flash、SVG矢量图）。 libGL的实现，既可以是基于软件的，也可以是基于硬件的。其中Mesa 3D是OpenGL的一个开源本的实现，支持3D硬件加速。 5）libDRM和kernel DRM DRI（Direct Render Infrastructure）的kernel实现，及其library。X-server或者Mesa 3D，可以通过DRI的接口，直接访问底层的图形设备（如GPU等）。 6）KMS（Kernel Mode Set） 一个用于控制显示设备属性的内核driver，如显示分辨率等。直接由X-server控制。&lt;/p>
+&lt;h4 id="4-后续工作">4. 后续工作&lt;/h4>
+&lt;p>本文有点像一个大杂烩，丢进去太多的东西，每个东西又不能细说。觉得说了很多，又觉得什么都没有说。后续蜗蜗将有针对性的，focus在某些点上面，更进一步的分析，思路如下：&lt;/p>
+&lt;blockquote>
+&lt;p>1）将会把显示框架限定到某个确定的实现上，初步计划是：Wayland client+Wayland compositor+Mesa+DRM+KMS，因为它们之中，除了Mesa之外，其它的都是linux系统中显示有关的比较前沿的技术。当然，最重要的，是比较适合移动端的技术。 2）通过单独的一篇文章，更详细的分析Wayland+Mesa+DRM+KMS的软件框架，着重分析图像送显、3D渲染、Direct render的过程，以此总结出DRM的功能和工作流程。 3）之后，把重心拉回kernel部分，主要包括DRM和KMS，当然，也会顺带介绍framebuffer。 4）kernel部分分析完毕后，回到Wayland，主要关心它的功能、使用方式等等。 5）其它的，边学、边写、边看吧。&lt;/p>
+&lt;/blockquote>
+&lt;p>&lt;em>原创文章，转发请注明出处。蜗窝科技，&lt;a href="http://www.wowotech.net/display_subsystem/graphic_subsystem_overview.html">www.wowotech.net&lt;/a>。&lt;/em>&lt;/p>
+- /posts/%e8%bd%aclinux%e5%9b%be%e5%bd%a2%e6%98%be%e7%a4%ba%e7%9b%b8%e5%85%b3%e5%86%85%e5%ae%b9/ - This is a customized copyright.</description></item></channel></rss>
